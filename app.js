@@ -41,27 +41,31 @@
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function sum(key) { return Object.values(state.days).reduce((total, item) => total + (Number(item[key]) || 0), 0); }
   function todayLabel() { return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()); }
-  let timerStart = null;
-  let timerBook = null;
+  let timerStart = Number(state.activeTimer?.startedAt) || null;
+  let timerBook = ['heart','dao'].includes(state.activeTimer?.book) ? state.activeTimer.book : null;
+  if (!timerBook) timerStart=null;
   function formatDuration(ms) {
     const seconds=Math.floor(Math.max(0,ms)/1000), h=Math.floor(seconds/3600), m=Math.floor(seconds%3600/60), sec=seconds%60;
     return h ? `${h}小时${String(m).padStart(2,'0')}分` : `${m}分${String(sec).padStart(2,'0')}秒`;
   }
   function startTimer() {
-    if (!timerStart && route==='recite' && reciteBook && document.visibilityState==='visible') { timerStart=Date.now(); timerBook=reciteBook; }
+    if (!timerStart && route==='recite' && reciteBook) {
+      timerStart=Date.now(); timerBook=reciteBook;
+      state.activeTimer={book:timerBook,startedAt:timerStart}; saveState();
+    }
   }
   function flushTimer(stop=false) {
-    if (timerStart && timerBook) {
-      const now=Date.now(); let cursor=timerStart;
-      while(cursor<now) {
-        const date=new Date(cursor); const midnight=new Date(date.getFullYear(),date.getMonth(),date.getDate()+1).getTime();
-        const end=Math.min(now,midnight); const entry=day(localDate(date));
-        if(!entry.readingMs) entry.readingMs={heart:0,dao:0};
-        entry.readingMs[timerBook]=(Number(entry.readingMs[timerBook])||0)+(end-cursor); cursor=end;
-      }
-      timerStart=stop?null:now; saveState();
-      if(stop) timerBook=null;
+    if (!timerStart || !timerBook) return;
+    const now=Date.now(); let cursor=timerStart;
+    while(cursor<now) {
+      const date=new Date(cursor); const midnight=new Date(date.getFullYear(),date.getMonth(),date.getDate()+1).getTime();
+      const end=Math.min(now,midnight); const entry=day(localDate(date));
+      if(!entry.readingMs) entry.readingMs={heart:0,dao:0};
+      entry.readingMs[timerBook]=(Number(entry.readingMs[timerBook])||0)+(end-cursor); cursor=end;
     }
+    if(stop) { timerStart=null; timerBook=null; delete state.activeTimer; }
+    else { timerStart=now; state.activeTimer={book:timerBook,startedAt:now}; }
+    saveState();
   }
   function todayReadingMs(book) {
     const saved=Number(day().readingMs?.[book])||0;
@@ -69,9 +73,9 @@
     return saved;
   }
   function updateTimerDisplay() { const el=document.getElementById('reading-timer'); if(el&&reciteBook) el.textContent=`今日 ${formatDuration(todayReadingMs(reciteBook))}`; }
-  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushTimer(true); else {startTimer(); updateTimerDisplay();} });
-  window.addEventListener('pagehide',()=>flushTimer(true));
-  window.addEventListener('pageshow',()=>{startTimer();updateTimerDisplay();});
+  document.addEventListener('visibilitychange',()=>{ if(timerStart) flushTimer(); updateTimerDisplay(); });
+  window.addEventListener('pagehide',()=>flushTimer());
+  window.addEventListener('pageshow',()=>{if(timerStart) flushTimer(); updateTimerDisplay();});
   setInterval(()=>{ if(timerStart && Date.now()-timerStart>=5000) flushTimer(); updateTimerDisplay(); },1000);
   function routeTo(name) {
     flushTimer(true);
@@ -167,7 +171,7 @@
     const countKey=isHeart?'xinCount':'daoCount';
     const todayCount=day()[countKey];
     const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 章　⌄</button><h2>第${reciteChapter}章</h2><div class="classic-text recitation-text">${layoutBlock("original",c.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation",c.translation,"translation-layout")}</details><details class="annotation-fold"><summary>本章导读</summary><p>${esc(c.note)}</p></details><div class="chapter-controls"><button data-action="swipe-prev" ${reciteChapter===1?'disabled':''}>← 上一章</button><button data-action="swipe-next" ${reciteChapter===81?'disabled':''}>下一章 →</button></div></div>`;})();
-    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px"><div class="recite-header"><button class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1>${bookName}</h1><div class="font-controls"><button data-action="font-smaller" aria-label="缩小字体">A−</button><button data-action="font-larger" aria-label="放大字体">A＋</button><button data-action="edit-layout" aria-label="编辑排版">✎</button></div></div><div class="layout-toolbar" role="toolbar" aria-label="排版工具"><button data-action="format" data-command="bold" aria-label="加粗"><b>B</b></button><button data-action="format" data-command="italic" aria-label="斜体"><i>I</i></button><button data-action="format" data-command="underline" aria-label="下划线"><u>U</u></button><button data-action="format" data-command="justifyLeft" aria-label="左对齐">☰</button><button data-action="format" data-command="justifyCenter" aria-label="居中">≡</button><button data-action="restore-layout" class="layout-restore">恢复默认</button></div><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div>${content}${!isHeart ? `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="选择章节"><div class="chapter-dialog-head"><h2>选择章节</h2><button data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${window.DAO_DE_JING.chapters.map(ch=>`<button class="chapter-tile ${ch.number===reciteChapter?"selected":""}" data-action="choose-chapter" data-number="${ch.number}" aria-label="第${ch.number}章 ${esc(ch.title)}"><span class="chapter-page">${esc(ch.text.slice(0,75))}</span><span class="chapter-label">第 ${ch.number} 章</span></button>`).join("")}</div></dialog>` : ""}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span></div><div class="recite-tools"><button class="woodfish fish-minus" data-action="undo" data-key="${countKey}" aria-label="减少一遍" title="减少一遍"><img src="assets/woodfish-minus.svg?v=9" alt=""></button><button class="woodfish fish-plus" data-action="count" data-key="${countKey}" aria-label="增加一遍" title="增加一遍"><img src="assets/woodfish-plus.svg?v=9" alt=""></button></div></div></div>`;
+    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px"><div class="recite-header"><button class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1>${bookName}</h1><div class="font-controls"><button data-action="font-smaller" aria-label="缩小字体">A−</button><button data-action="font-larger" aria-label="放大字体">A＋</button><button data-action="edit-layout" aria-label="编辑排版">✎</button></div></div><div class="layout-toolbar" role="toolbar" aria-label="排版工具"><button data-action="format" data-command="bold" aria-label="加粗"><b>B</b></button><button data-action="format" data-command="italic" aria-label="斜体"><i>I</i></button><button data-action="format" data-command="underline" aria-label="下划线"><u>U</u></button><button data-action="format" data-command="justifyLeft" aria-label="左对齐">☰</button><button data-action="format" data-command="justifyCenter" aria-label="居中">≡</button><button data-action="restore-layout" class="layout-restore">恢复默认</button></div><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div>${content}<div class="timer-control"><button class="timer-start" data-action="start-timer" ${timerStart ? "disabled" : ""}>${timerStart ? "计时中" : "开始"}</button></div>${!isHeart ? `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="选择章节"><div class="chapter-dialog-head"><h2>选择章节</h2><button data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${window.DAO_DE_JING.chapters.map(ch=>`<button class="chapter-tile ${ch.number===reciteChapter?"selected":""}" data-action="choose-chapter" data-number="${ch.number}" aria-label="第${ch.number}章 ${esc(ch.title)}"><span class="chapter-page">${esc(ch.text.slice(0,75))}</span><span class="chapter-label">第 ${ch.number} 章</span></button>`).join("")}</div></dialog>` : ""}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span></div><div class="recite-tools"><button class="woodfish fish-minus" data-action="undo" data-key="${countKey}" aria-label="减少一遍" title="减少一遍"><img src="assets/woodfish-minus.svg?v=9" alt=""></button><button class="woodfish fish-plus" data-action="count" data-key="${countKey}" aria-label="增加一遍" title="增加一遍"><img src="assets/woodfish-plus.svg?v=9" alt=""></button></div></div></div>`;
   }
   let turningChapter = false;
   async function turnChapter(next) {
@@ -216,7 +220,8 @@
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
     const button=event.target.closest('[data-action]'); if (!button) return;
     const action=button.dataset.action;
-    if (action === 'open-recitation') { flushTimer(true); reciteBook=button.dataset.book; reciteChapter=1; route='recite'; startTimer(); document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-recite')); renderRecite(); window.scrollTo(0,0); }
+    if (action === 'open-recitation') { flushTimer(true); reciteBook=button.dataset.book; reciteChapter=1; route='recite'; document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-recite')); renderRecite(); window.scrollTo(0,0); }
+    if (action === 'start-timer') { startTimer(); button.textContent='计时中'; button.disabled=true; updateTimerDisplay(); return; }
     if (action === 'edit-layout') { setLayoutEditing(!layoutEditing); return; }
     if (action === 'format') { if(layoutEditing) document.execCommand(button.dataset.command, false, null); return; }
     if (action === 'restore-layout') { if(confirm('恢复本篇原文和译文的默认排版？')) { const base=layoutBaseKey(); if(state.layouts){delete state.layouts[base+':original'];delete state.layouts[base+':translation'];} saveState(); layoutEditing=false; renderRecite(); showToast('已恢复默认排版'); } return; }
