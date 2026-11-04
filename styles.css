@@ -308,3 +308,11 @@ body { background:var(--paper); }
 .bottom-nav { position:fixed; bottom:0; left:0; right:0; transform:none; width:auto; max-width:660px; margin:0 auto; padding:8px 18px 12px; padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px)); z-index:100; display:grid; grid-template-columns:repeat(3,1fr); background:#fffdf8; }
 .app-shell.immersive .bottom-nav { display:none; }
 #view-today { padding-top:24px; }
+:root { --paper:#f2f7f1; --paper-deep:#e0ebe0; --card:#fff; --ink:#253c2d; --muted:#718777; --line:#dce9de; --green:#3e7651; --green-soft:#e4f1e6; --red:#4e835d; }
+body { background:var(--paper); }
+.practice-card { background:#fff; border:1px solid #e0ebe1; }
+.bottom-nav,.recite-footer { background:#f7fbf6; }
+.nav-item.active,.chapter-controls button,.font-controls button { color:var(--green); }
+.woodfish { position:relative; width:72px; height:62px; }
+.woodfish span { position:absolute; right:0; bottom:1px; width:23px; height:23px; display:grid; place-items:center; border-radius:50%; background:#f2f8f1; border:1px solid #8eb299; color:#315a41; font-size:19px; line-height:1; font-weight:600; pointer-events:none; }
+.recite-tools { gap:32px; }

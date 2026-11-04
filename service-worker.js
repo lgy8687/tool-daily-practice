@@ -1,6 +1,6 @@
-const CACHE_NAME = 'rikey-static-v7';
+const CACHE_NAME = 'rikey-static-v8';
 const APP_FILES = [
-  './', './index.html', './styles.css?v=7', './app.js?v=7', './data/dao-de-jing.js?v=7',
+  './', './index.html', './styles.css?v=8', './app.js?v=8', './data/dao-de-jing.js?v=8',
   './manifest.webmanifest', './icon.svg'
 ];
 
