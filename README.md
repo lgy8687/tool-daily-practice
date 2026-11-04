@@ -24,3 +24,5 @@
 ## 发布
 
 这是无需构建步骤的静态网页。GitHub Actions 会把仓库根目录发布到 GitHub Pages。
+
+在线使用：[日课 · 读诵与日常](https://lgy8687.github.io/tool-daily-practice/)
