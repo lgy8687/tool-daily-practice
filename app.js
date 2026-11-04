@@ -9,6 +9,7 @@
   let state = loadState();
   let route = 'today';
   let readingBook = 'dao';
+  let reciteBook = null;
   let chapterNumber = 1;
   let toastTimer;
 
@@ -37,6 +38,8 @@
   function todayLabel() { return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()); }
   function routeTo(name) {
     route = name;
+    reciteBook = null;
+    document.querySelector('.app-shell').classList.remove('immersive');
     document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${name}`));
     document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.route === name));
     history.replaceState(null, '', `#${name}`);
@@ -58,36 +61,47 @@
     const movieTarget = Number(state.settings.movieTarget) || 100;
     const movieProgress = Math.min(100, Math.round(sum('movieViews') / movieTarget * 100));
     const activityRows = current.activities.length ? current.activities.map(activity => `
-      <div class="activity-row"><span><b>${esc(activity.title)}</b><br><small>${esc(activity.time || '')}</small></span><span><small>${Number(activity.minutes) || 0} 分钟</small> <button class="delete-activity" data-action="delete-activity" data-id="${esc(activity.id)}" aria-label="删除记录">×</button></span></div>`).join('') : '<div class="empty-state">完成一项工作后，在这里记下来。</div>';
+      <div class="activity-row"><span>${esc(activity.title)} <small>${esc(activity.time || '')}</small></span><span><small>${Number(activity.minutes) || 0} 分钟</small> <button class="delete-activity" data-action="delete-activity" data-id="${esc(activity.id)}" aria-label="删除记录">×</button></span></div>`).join('') : '<div class="empty-state">今天还没有记录</div>';
     document.getElementById('view-today').innerHTML = `
-      <div class="page-intro"><div class="date-line">${todayLabel()} · 今日一页</div><h1 id="today-title">慢慢来，日日有功。</h1><p class="muted">把读过、背过、做过的事，留下一点痕迹。</p></div>
-      <section class="hero-card"><div class="hero-top"><div><span class="eyebrow">TODAY'S PRACTICE</span><div class="hero-title">今日修习</div><p class="hero-sub">一日一页，积少成多</p></div><span aria-hidden="true" style="font:24px 'Noto Serif SC';color:#c7b589">☼</span></div>
-        <div class="hero-metrics"><div class="hero-metric"><strong>${current.daoCount + current.xinCount}</strong><span>今日背诵遍数</span></div><div class="hero-metric"><strong>${current.readings.length}</strong><span>今日阅读记录</span></div><div class="hero-metric"><strong>${minutes}</strong><span>工作分钟</span></div></div></section>
-      <div class="section-heading"><h2>今日进度</h2><span class="aside">所有记录仅保存在本机</span></div>
-      <div class="quick-grid"><article class="quick-card"><div class="label"><span>▤</span>经典阅读</div><div class="num">${current.readings.length}<span style="font-size:12px;font-weight:400"> 项</span></div><div class="caption">${esc(dayReadLabel(current))}</div></article><article class="quick-card"><div class="label"><span>◎</span>背诵</div><div class="num accent">${current.daoCount + current.xinCount}<span style="font-size:12px;font-weight:400"> 遍</span></div><div class="caption">《道德经》${current.daoCount} · 《心经》${current.xinCount}</div></article></div>
-      <article class="card movie-card"><div class="movie-head"><div><strong>${esc(state.settings.movieTitle || '英语电影')}</strong><small>英语电影 · 100 遍计划</small></div><button class="button small ghost" data-route="read">去读经典</button></div><div class="progress-track"><div class="progress-fill" style="width:${movieProgress}%"></div></div><div class="movie-foot"><span class="movie-count">累计 ${sum('movieViews')} / ${movieTarget} 遍</span><button class="button small secondary" data-action="movie">看完一遍 +1</button></div></article>
-      <div class="section-heading"><h2>其他工作</h2><span class="aside">今天 · ${minutes} 分钟</span></div>
-      <article class="card activity-card"><div class="activity-form"><input id="activity-title" class="field" maxlength="60" placeholder="做了什么？" aria-label="工作内容"><input id="activity-minutes" class="field" type="number" min="0" max="1440" inputmode="numeric" placeholder="分钟" aria-label="用时分钟"><button class="button primary" data-action="add-activity">记一笔</button></div><div class="activity-list">${activityRows}</div></article>
-      <p class="quote">“合抱之木，生于毫末；九层之台，起于累土。”<br><b>——《道德经·第六十四章》</b></p>`;
+      <div class="page-intro"><div class="date-line">${todayLabel()}</div><h1 id="today-title">今日</h1></div>
+      <div class="daily-summary"><span>背诵 <b>${current.daoCount + current.xinCount}</b> 遍</span><span>阅读 <b>${current.readings.length}</b> 项</span><span>工作 <b>${minutes}</b> 分钟</span></div>
+      <section class="simple-section"><div class="section-heading"><h2>英语电影</h2><span class="aside">${sum('movieViews')} / ${movieTarget} 遍</span></div><div class="movie-line"><div class="movie-head"><div><strong>${esc(state.settings.movieTitle || '英语电影')}</strong><small>100 遍计划</small></div><button class="button small secondary" data-action="movie">看完一遍 +1</button></div><div class="progress-track"><div class="progress-fill" style="width:${movieProgress}%"></div></div></div></section>
+      <section class="simple-section"><div class="section-heading"><h2>其他工作</h2><span class="aside">${current.activities.length} 项</span></div><div class="activity-form"><input id="activity-title" class="field" maxlength="60" placeholder="记一项工作" aria-label="工作内容"><input id="activity-minutes" class="field" type="number" min="0" max="1440" inputmode="numeric" placeholder="分钟" aria-label="用时分钟"><button class="button primary" data-action="add-activity">添加</button></div><div class="activity-list">${activityRows}</div></section>`;
   }
   function daoReader() {
     const chapter = window.DAO_DE_JING.chapters[chapterNumber - 1];
     const done = day().readings.includes(`dao:${chapterNumber}`);
     const chips = window.DAO_DE_JING.chapters.map(item => `<button class="chapter-chip ${item.number === chapterNumber ? 'active' : ''} ${day().readings.includes(`dao:${item.number}`) ? 'done' : ''}" data-action="chapter" data-number="${item.number}" aria-label="第${item.number}章 ${esc(item.title)}">${String(item.number).padStart(2, '0')}</button>`).join('');
-    return `<div class="chapter-list" aria-label="选择章节">${chips}</div><article class="card reading-panel"><div class="reading-meta">《道德经》 · 第 ${String(chapter.number).padStart(2, '0')} 章</div><h2 class="reading-title">${esc(chapter.title)}</h2><div class="classic-text">${esc(chapter.text)}</div><div class="annotation"><b>白话导读</b><br>${esc(chapter.note)}</div><div class="reading-actions"><button class="button ghost small" data-action="prev-chapter" ${chapterNumber === 1 ? 'disabled' : ''}>上一章</button><button class="button ${done ? 'secondary' : 'primary'} small" data-action="mark-read" data-key="dao:${chapterNumber}">${done ? '今日已读 ✓' : '标记今日读过'}</button><button class="button ghost small" data-action="next-chapter" ${chapterNumber === 81 ? 'disabled' : ''}>下一章</button></div></article>`;
+    return `<details class="chapter-picker"><summary>选择章节　·　共八十一章</summary><div class="chapter-list" aria-label="选择章节">${chips}</div></details><article class="reading-panel"><div class="reading-meta">第 ${String(chapter.number).padStart(2, '0')} 章</div><h2 class="reading-title">${esc(chapter.title)}</h2><div class="classic-text">${esc(chapter.text)}</div><details class="annotation-fold"><summary>查看本章注释</summary><p>${esc(chapter.note)}</p></details><div class="reading-actions"><button class="text-button" data-action="prev-chapter" ${chapterNumber === 1 ? 'disabled' : ''}>← 上一章</button><button class="button ${done ? 'secondary' : 'primary'} small" data-action="mark-read" data-key="dao:${chapterNumber}">${done ? '今日已读 ✓' : '标记读过'}</button><button class="text-button" data-action="next-chapter" ${chapterNumber === 81 ? 'disabled' : ''}>下一章 →</button></div></article>`;
   }
   function heartReader() {
-    return `<div class="card reading-panel"><div class="reading-meta">唐 · 玄奘译</div><h2 class="reading-title">般若波罗蜜多心经</h2><div class="heart-sections">${HEART.map(segment => `<article class="heart-section"><h3>${esc(segment.title)}</h3><p>${esc(segment.text)}</p><small><b>读后提示</b>　${esc(segment.note)}</small></article>`).join('')}</div><div class="reading-actions"><span class="muted" style="align-self:center">版本来源：维基文库</span><button class="button ${day().readings.includes('heart') ? 'secondary' : 'primary'} small" data-action="mark-read" data-key="heart">${day().readings.includes('heart') ? '今日已读 ✓' : '标记今日读过'}</button></div></div>`;
+    const done=day().readings.includes('heart');
+    return `<article class="reading-panel"><div class="reading-meta">唐 · 玄奘译</div><h2 class="reading-title">般若波罗蜜多心经</h2><div class="classic-text">${HEART.map(segment=>esc(segment.text)).join('\n')}</div><details class="annotation-fold"><summary>查看心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details><div class="reading-actions"><span class="muted" style="align-self:center">维基文库 · 玄奘译本</span><button class="button ${done ? 'secondary' : 'primary'} small" data-action="mark-read" data-key="heart">${done ? '今日已读 ✓' : '标记读过'}</button></div></article>`;
   }
   function renderRead() {
-    document.getElementById('view-read').innerHTML = `<div class="page-intro"><span class="eyebrow">READING</span><h1 id="read-title">读一章，也很好。</h1><p class="muted">原文与白话导读放在一起，按自己的节奏慢慢读。</p></div><div class="switcher"><button class="pill ${readingBook === 'dao' ? 'active' : ''}" data-action="book" data-book="dao">《道德经》 · 八十一章</button><button class="pill ${readingBook === 'heart' ? 'active' : ''}" data-action="book" data-book="heart">《心经》</button></div>${readingBook === 'dao' ? daoReader() : heartReader()}<p class="source-note">《道德经》原文采用维基文库《道德经（王弼本）》并转换为简体；章名与白话导读为本工具整理，供个人阅读参考。<br>《心经》采用玄奘译本，白话提示为本工具整理。<br><a href="https://zh.wikisource.org/zh-hans/道德经_(王弼本)" target="_blank" rel="noreferrer">查看《道德经》来源</a> · <a href="https://zh.wikisource.org/zh-hans/般若波罗蜜多心经_(玄奘)" target="_blank" rel="noreferrer">查看《心经》来源</a></p>`;
+    document.getElementById('view-read').innerHTML = `<div class="page-intro"><h1 id="read-title">读经典</h1></div><div class="switcher"><button class="pill ${readingBook === 'dao' ? 'active' : ''}" data-action="book" data-book="dao">《道德经》</button><button class="pill ${readingBook === 'heart' ? 'active' : ''}" data-action="book" data-book="heart">《心经》</button></div>${readingBook === 'dao' ? daoReader() : heartReader()}<p class="source-note">《道德经》王弼本，简体转换；注释为白话导读。<br>《心经》玄奘译本。<br><a href="https://zh.wikisource.org/zh-hans/道德经_(王弼本)" target="_blank" rel="noreferrer">原文来源</a> · <a href="https://zh.wikisource.org/zh-hans/般若波罗蜜多心经_(玄奘)" target="_blank" rel="noreferrer">心经来源</a></p>`;
   }
   function renderRecite() {
-    const current = day();
-    document.getElementById('view-recite').innerHTML = `<div class="recite-intro"><span class="eyebrow">RECITATION</span><h1 id="recite-title">背诵，点一下记一次。</h1><p class="muted">每完成一遍，轻触对应按钮。当天次数和累计次数会分别保存。</p></div>
-      <article class="card recite-card" data-seal="道"><div class="recite-top"><h2>《道德经》</h2><span class="recite-total">累计 ${sum('daoCount')} 遍</span></div><div class="recite-count"><strong>${current.daoCount}</strong><span>遍 · 今天</span></div><button class="tap-button" data-action="count" data-key="daoCount">完成一遍《道德经》　＋</button><div class="tap-actions"><small>点按一次，计数加一</small><button class="text-button" data-action="undo" data-key="daoCount">撤销一次</button></div></article>
-      <article class="card recite-card" data-seal="心"><div class="recite-top"><h2>《心经》</h2><span class="recite-total">累计 ${sum('xinCount')} 遍</span></div><div class="recite-count"><strong>${current.xinCount}</strong><span>遍 · 今天</span></div><button class="tap-button cinnabar" data-action="count" data-key="xinCount">完成一遍《心经》　＋</button><div class="tap-actions"><small>点按一次，计数加一</small><button class="text-button" data-action="undo" data-key="xinCount">撤销一次</button></div></article>
-      <button class="button secondary" data-route="read" style="width:100%;margin-top:3px">去阅读原文与导读　→</button>`;
+    const node=document.getElementById('view-recite');
+    const shell=document.querySelector('.app-shell');
+    if (!reciteBook) {
+      shell.classList.remove('immersive');
+      node.innerHTML=`<div class="page-intro"><h1 id="recite-title">选择背诵内容</h1></div><div class="recite-choices"><button class="recite-choice" data-action="open-recitation" data-book="dao"><span>《道德经》</span><small>累计 ${sum('daoCount')} 遍　→</small></button><button class="recite-choice" data-action="open-recitation" data-book="heart"><span>《心经》</span><small>累计 ${sum('xinCount')} 遍　→</small></button></div>`;
+      return;
+    }
+    shell.classList.add('immersive');
+    const isHeart=reciteBook==='heart';
+    const bookName=isHeart?'《心经》':'《道德经》';
+    const countKey=isHeart?'xinCount':'daoCount';
+    const todayCount=day()[countKey];
+    const content=isHeart ? `<div class="classic-text recitation-text">${HEART.map(segment=>esc(segment.text)).join('\n')}</div><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : `<div class="full-dao-text">${window.DAO_DE_JING.chapters.map(chapter=>`<section class="dao-recitation-chapter"><h2>第${chapter.number}章</h2><div class="classic-text recitation-text">${esc(chapter.text)}</div></section>`).join('')}</div>`;
+    node.innerHTML=`<div class="recitation-screen"><button class="back-button" data-action="back-recitation">‹　返回</button><h1>${bookName}</h1><div class="recitation-origin">完整经文 · 慢慢背诵</div>${content}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span><button class="text-button" data-action="undo" data-key="${countKey}">撤销</button></div><button class="tap-button ${isHeart?'cinnabar':''}" data-action="count" data-key="${countKey}">点一下 · 完成一遍</button></div></div>`;
+  }
+  function updateReciteProgress(key) {
+    const todayCount=document.getElementById('recite-today-count');
+    const total=document.querySelector('.recite-progress span');
+    if(todayCount) todayCount.textContent=`今日 ${day()[key]} 遍`;
+    if(total) total.textContent=`累计 ${sum(key)} 遍`;
   }
   function lastDays(n) {
     const items=[]; const now=new Date(); now.setHours(12,0,0,0);
@@ -101,10 +115,9 @@
     const activeDays=Object.entries(state.days).filter(([,item]) => (item.daoCount+item.xinCount+item.movieViews+item.readings.length+item.activities.length)>0).length;
     const allReads=Object.values(state.days).reduce((total,item)=>total+(item.readings?.length||0),0);
     const history=dates.slice().reverse().map(date => { const item=state.days[date] || blankDay(); const sumRecite=item.daoCount+item.xinCount; const activities=item.activities.length; const mins=item.activities.reduce((total,a)=>total+(Number(a.minutes)||0),0); return `<div class="history-row"><b>${date === localDate() ? '今天' : date.slice(5).replace('-',' / ')}</b><span>诵 ${sumRecite} · 读 ${item.readings.length}</span><span>电影 ${item.movieViews} · 工作 ${activities} 项 / ${mins} 分</span></div>`; }).join('');
-    document.getElementById('view-stats').innerHTML = `<div class="page-intro"><span class="eyebrow">YOUR PRACTICE</span><h1 id="stats-title">日积月累，看得见。</h1><p class="muted">这一周的小小记录，都算数。</p></div><div class="stats-overview"><div class="stat-box"><strong>${sum('daoCount')}</strong><span>道德经累计遍数</span></div><div class="stat-box"><strong>${sum('xinCount')}</strong><span>心经累计遍数</span></div><div class="stat-box"><strong>${sum('movieViews')}<small style="font-size:11px;color:var(--muted)">/${Number(state.settings.movieTarget)||100}</small></strong><span>电影累计遍数</span></div></div>
-      <article class="card chart-card"><div class="section-heading" style="margin:0"><h2>近 7 日修习</h2><span class="aside">${activeDays} 天有记录 · 阅读 ${allReads} 项</span></div><div class="chart">${dates.map((date,index)=>`<div class="chart-day ${date===localDate()?'today':''}"><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4,values[index]/max*92)}px"></div></div><span>${date.slice(5).replace('-','/')}</span></div>`).join('')}</div><p class="muted" style="font-size:10px;margin:9px 0 0">柱高汇总当天背诵、电影、阅读和工作记录数量。</p></article>
-      <div class="section-heading"><h2>每日记录</h2><span class="aside">最近 7 天</span></div><article class="card" style="padding:0 13px"><div class="history-list">${history}</div></article>
-      <div class="section-heading"><h2>累计进度</h2><span class="aside">可在设置中备份数据</span></div><article class="card activity-card"><div class="movie-head"><div><strong>${esc(state.settings.movieTitle || '英语电影')}</strong><small>${sum('movieViews')} 遍 / ${Number(state.settings.movieTarget)||100} 遍</small></div><span class="eyebrow">${Math.min(100,Math.round(sum('movieViews')/(Number(state.settings.movieTarget)||100)*100))}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,Math.round(sum('movieViews')/(Number(state.settings.movieTarget)||100)*100))}%"></div></div></article>`;
+    document.getElementById('view-stats').innerHTML = `<div class="page-intro"><h1 id="stats-title">统计</h1></div><div class="stats-line"><span>道德经 <b>${sum('daoCount')}</b></span><span>心经 <b>${sum('xinCount')}</b></span><span>电影 <b>${sum('movieViews')}</b></span></div>
+      <section class="simple-section"><div class="section-heading"><h2>近 7 日</h2><span class="aside">${activeDays} 天有记录 · 阅读 ${allReads} 项</span></div><div class="chart">${dates.map((date,index)=>`<div class="chart-day ${date===localDate()?'today':''}"><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4,values[index]/max*92)}px"></div></div><span>${date.slice(5).replace('-','/')}</span></div>`).join('')}</div></section>
+      <section class="simple-section"><div class="section-heading"><h2>每日记录</h2><span class="aside">最近 7 天</span></div><div class="history-list">${history}</div></section>`;
   }
   function render() {
     renderToday(); renderRead(); renderRecite(); renderStats();
@@ -115,6 +128,8 @@
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
     const button=event.target.closest('[data-action]'); if (!button) return;
     const action=button.dataset.action;
+    if (action === 'open-recitation') { reciteBook=button.dataset.book; renderRecite(); window.scrollTo(0,0); }
+    if (action === 'back-recitation') { reciteBook=null; renderRecite(); window.scrollTo(0,0); }
     if (action === 'book') { readingBook=button.dataset.book; renderRead(); }
     if (action === 'chapter') { chapterNumber=Number(button.dataset.number); renderRead(); }
     if (action === 'prev-chapter' && chapterNumber>1) { chapterNumber--; renderRead(); }
@@ -124,8 +139,11 @@
       if (index >= 0) { reads.splice(index,1); showToast('已取消今日阅读记录'); } else { reads.push(key); showToast('已记下今天读过'); }
       saveState(); render();
     }
-    if (action === 'count') { const item=day(); item[button.dataset.key]++; saveState(); if (navigator.vibrate) navigator.vibrate(12); render(); }
-    if (action === 'undo') { const item=day(); const key=button.dataset.key; if(item[key]>0){item[key]--;saveState();render();showToast('已撤销一次');} }
+    if (action === 'count') {
+      const key=button.dataset.key; day()[key]++; saveState(); if (navigator.vibrate) navigator.vibrate(12);
+      if (route==='recite' && reciteBook) updateReciteProgress(key); else render();
+    }
+    if (action === 'undo') { const item=day(); const key=button.dataset.key; if(item[key]>0){item[key]--;saveState();if(route==='recite'&&reciteBook)updateReciteProgress(key);else render();showToast('已撤销一次');} }
     if (action === 'movie') { day().movieViews++; saveState(); render(); showToast('已记录：电影看完一遍'); }
     if (action === 'add-activity') {
       const titleInput=document.getElementById('activity-title'); const minutesInput=document.getElementById('activity-minutes');
