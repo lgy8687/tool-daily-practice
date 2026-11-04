@@ -16,6 +16,9 @@
   const currentFontSize = () => Number(localStorage.getItem(fontKey())) || 18;
   let layoutEditing = false;
   let chapterNumber = 1;
+  let statsBook = 'heart';
+  let statsMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  let statsSelectedDate = localDate();
   let toastTimer;
 
   function blankDay() { return { daoCount: 0, xinCount: 0, movieViews: 0, readings: [], activities: [] }; }
@@ -99,7 +102,7 @@
     return [dao ? `《道德经》${dao}章` : '', xin ? '《心经》' : ''].filter(Boolean).join(' · ');
   }
   function renderToday() {
-    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div></button><button class="practice-edit" data-action="edit-record" data-date="${localDate()}" aria-label="修改今日记录" title="修改今日记录">✎</button></article>`;
+    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div><div class="practice-time">今日时长　${formatDuration(day().readingMs?.[book]||0)}</div></button></article>`;
     document.getElementById('view-today').innerHTML=`${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
   }
   function daoReader() {
@@ -203,19 +206,27 @@
     return items;
   }
   function renderStats() {
-    const dates=lastDays(7);
-    const values=dates.map(date => { const item=state.days[date] || blankDay(); return item.daoCount+item.xinCount; });
-    const max=Math.max(...values,1);
-    const activeDays=Object.entries(state.days).filter(([,item]) => (item.daoCount+item.xinCount+(Number(item.readingMs?.dao)||0)+(Number(item.readingMs?.heart)||0))>0).length;
-    const allReads=Object.values(state.days).reduce((total,item)=>total+(item.readings?.length||0),0);
-    const totalDao=Object.values(state.days).reduce((total,item)=>total+(Number(item.readingMs?.dao)||0),0);
-    const totalHeart=Object.values(state.days).reduce((total,item)=>total+(Number(item.readingMs?.heart)||0),0);
-    const recordedDates=Object.keys(state.days).filter(date=>/^\d{4}-\d{2}-\d{2}$/.test(date)).filter(date=>{const d=state.days[date];return Number(d.daoCount)>0 || Number(d.xinCount)>0 || Number(d.readingMs?.dao)>0 || Number(d.readingMs?.heart)>0;});
-    const historyDates=[...new Set([localDate(),...recordedDates])].sort().reverse();
-    const history=historyDates.map(date=>{ const item=state.days[date] || blankDay(); return `<div class="history-row record-history-row"><b>${date===localDate()?'今天':date}</b><span>道德经 ${Number(item.daoCount)||0} 遍 · ${formatDuration(item.readingMs?.dao||0)}<br>心经 ${Number(item.xinCount)||0} 遍 · ${formatDuration(item.readingMs?.heart||0)}</span><button class="history-edit" data-action="edit-record" data-date="${date}" aria-label="修改 ${date} 的记录">✎</button></div>`; }).join('');
-    document.getElementById('view-stats').innerHTML = `<div class="page-intro"><h1 id="stats-title">统计</h1></div><div class="stats-line"><span>道德经 <b>${sum('daoCount')}</b></span><span>心经 <b>${sum('xinCount')}</b></span></div><div class="reading-totals">道德经 ${formatDuration(totalDao)}　·　心经 ${formatDuration(totalHeart)}</div>
-      <section class="simple-section"><div class="section-heading"><h2>近 7 日</h2><span class="aside">${activeDays} 天有记录 · 阅读 ${allReads} 项</span></div><div class="chart">${dates.map((date,index)=>`<div class="chart-day ${date===localDate()?'today':''}"><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4,values[index]/max*92)}px"></div></div><span>${date.slice(5).replace('-','/')}</span></div>`).join('')}</div></section>
-      <section class="simple-section"><div class="section-heading"><h2>每日记录</h2><button class="text-button" data-action="edit-record">选择日期修改</button></div><div class="history-list">${history}</div></section>`;
+    const book=statsBook, countKey=book==='heart'?'xinCount':'daoCount';
+    const year=statsMonth.getFullYear(), month=statsMonth.getMonth();
+    const monthPrefix=`${year}-${String(month+1).padStart(2,'0')}`;
+    const all=Object.entries(state.days).filter(([date])=>/^\d{4}-\d{2}-\d{2}$/.test(date));
+    const thisMonth=all.filter(([date])=>date.startsWith(monthPrefix+'-'));
+    const totals=entries=>entries.reduce((acc,[,item])=>{const n=Number(item[countKey])||0,ms=Number(item.readingMs?.[book])||0;acc.count+=n;acc.ms+=ms;if(n>0||ms>0)acc.days++;return acc;},{count:0,ms:0,days:0});
+    const allStats=totals(all), monthStats=totals(thisMonth), todayStats=totals([[localDate(),state.days[localDate()]||blankDay()]]);
+    const hasPractice=date=>{const d=state.days[date]||blankDay();return (Number(d[countKey])||0)>0 || (Number(d.readingMs?.[book])||0)>0;};
+    const streakDay=new Date(); streakDay.setHours(12,0,0,0); if(!hasPractice(localDate(streakDay)))streakDay.setDate(streakDay.getDate()-1);
+    let streak=0; while(hasPractice(localDate(streakDay))) { streak++; streakDay.setDate(streakDay.getDate()-1); }
+    const selected=state.days[statsSelectedDate]||blankDay();
+    const offset=(new Date(year,month,1).getDay()+6)%7, maxDay=new Date(year,month+1,0).getDate(), today=localDate();
+    const blanks=Array.from({length:offset},()=>'<span class="calendar-blank"></span>').join('');
+    const calendar=Array.from({length:maxDay},(_,i)=>{const n=i+1,date=`${monthPrefix}-${String(n).padStart(2,'0')}`,item=state.days[date]||blankDay(),hasRecord=(Number(item[countKey])||0)>0||(Number(item.readingMs?.[book])||0)>0,isFuture=date>today;return `<button class="calendar-day ${date===statsSelectedDate?'selected':''} ${date===today?'today':''}" data-action="stats-day" data-date="${date}" aria-label="${date}${hasRecord?'，有记录':''}" ${isFuture?'disabled':''}><span>${n}</span>${hasRecord?'<i></i>':''}</button>`;}).join('');
+    const isCurrentMonth=year===new Date().getFullYear() && month===new Date().getMonth();
+    const cell=(label,obj)=>`<div class="report-cell"><span>${label}</span><b>${obj.count}<small> 遍</small></b><em>${formatDuration(obj.ms)}</em></div>`;
+    document.getElementById('view-stats').innerHTML=`<div class="report-header"><h1 id="stats-title">统计</h1></div>
+      <div class="report-tabs" role="group" aria-label="选择经典"><button data-action="stats-book" data-book="heart" class="${book==='heart'?'active':''}" aria-pressed="${book==='heart'}">心经</button><button data-action="stats-book" data-book="dao" class="${book==='dao'?'active':''}" aria-pressed="${book==='dao'}">道德经</button></div>
+      <section class="report-summary"><div class="report-section-title"><h2>修习概览</h2><span>累计 ${allStats.days} 天 · 连续 ${streak} 天</span></div><div class="report-cells">${cell('今日',todayStats)}${cell(isCurrentMonth?'本月':'当月',monthStats)}${cell('累计',allStats)}</div><div class="report-month-days">${year} 年 ${month+1} 月　·　修习 ${monthStats.days} 天</div></section>
+      <section class="report-calendar"><div class="calendar-heading"><h2>日历</h2><div class="calendar-month"><button data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="calendar-grid calendar-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid calendar-days">${blanks}${calendar}</div><div class="calendar-legend"><i></i> 有记录</div></section>
+      <section class="selected-record"><div class="selected-record-heading"><h2>${statsSelectedDate===today?'今天':statsSelectedDate}</h2><button class="record-edit-link" data-action="edit-record" data-date="${statsSelectedDate}">修改数据</button></div><div class="selected-record-row"><span>心经</span><b>${Number(selected.xinCount)||0} 遍</b><small>${formatDuration(selected.readingMs?.heart||0)}</small></div><div class="selected-record-row"><span>道德经</span><b>${Number(selected.daoCount)||0} 遍</b><small>${formatDuration(selected.readingMs?.dao||0)}</small></div></section>`;
   }
   function render() {
     renderToday(); renderRead(); renderRecite(); renderStats();
@@ -248,6 +259,7 @@
       const input=document.getElementById(`record-${book}-time`); const [h,m,s]=input.value.split(':').map(Number);
       entry.readingMs[book]=input.value===input.dataset.originalValue ? Number(input.dataset.originalMs) : (h*3600+m*60+s)*1000;
     }
+    statsSelectedDate=date; const [year,month]=date.split('-').map(Number); statsMonth=new Date(year,month-1,1);
     saveState(); document.getElementById('record-dialog').close(); render(); showToast('记录已保存');
   });
   document.addEventListener('click', event => {
@@ -255,6 +267,12 @@
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
     const button=event.target.closest('[data-action]'); if (!button) return;
     const action=button.dataset.action;
+    if (action === 'stats-book') { statsBook=button.dataset.book; renderStats(); return; }
+    if (action === 'stats-day') { statsSelectedDate=button.dataset.date; renderStats(); return; }
+    if (action === 'stats-prev-month' || action === 'stats-next-month') {
+      const delta=action==='stats-prev-month'?-1:1; statsMonth=new Date(statsMonth.getFullYear(),statsMonth.getMonth()+delta,1);
+      const today=new Date(); statsSelectedDate=(statsMonth.getFullYear()===today.getFullYear()&&statsMonth.getMonth()===today.getMonth())?localDate():localDate(statsMonth); renderStats(); return;
+    }
     if (action === 'edit-record') { openRecordEditor(button.dataset.date || localDate()); return; }
     if (action === 'open-recitation') { flushTimer(true); reciteBook=button.dataset.book; reciteChapter=1; route='recite'; document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-recite')); renderRecite(); window.scrollTo(0,0); }
     if (action === 'start-timer') { startTimer(); const key=reciteBook==='heart'?'xinCount':'daoCount'; document.querySelector('.recite-footer').innerHTML=reciteFooter(key); updateTimerDisplay(); return; }
