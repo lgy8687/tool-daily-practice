@@ -1,7 +1,7 @@
-const CACHE_NAME = 'rikey-static-v8';
+const CACHE_NAME = 'rikey-static-v9';
 const APP_FILES = [
-  './', './index.html', './styles.css?v=8', './app.js?v=8', './data/dao-de-jing.js?v=8',
-  './manifest.webmanifest', './icon.svg'
+  './', './index.html', './styles.css?v=9', './app.js?v=9', './data/dao-de-jing.js?v=9',
+  './manifest.webmanifest', './icon.svg', './assets/woodfish-minus.svg?v=9', './assets/woodfish-plus.svg?v=9'
 ];
 
 self.addEventListener('install', event => {
