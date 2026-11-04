@@ -11,6 +11,7 @@
   let readingBook = 'dao';
   let reciteBook = null;
   let reciteChapter = 1;
+  let textSize = Number(localStorage.getItem('rikey.fontSize')) || 15;
   let chapterNumber = 1;
   let toastTimer;
 
@@ -70,7 +71,7 @@
       <section class="simple-section"><div class="section-heading"><h2>其他工作</h2><span class="aside">${current.activities.length} 项</span></div><div class="activity-form"><input id="activity-title" class="field" maxlength="60" placeholder="记一项工作" aria-label="工作内容"><input id="activity-minutes" class="field" type="number" min="0" max="1440" inputmode="numeric" placeholder="分钟" aria-label="用时分钟"><button class="button primary" data-action="add-activity">添加</button></div><div class="activity-list">${activityRows}</div></section>`;
   }
   function renderToday() {
-    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div></button><div class="practice-actions"><button data-action="report" data-key="${key}">报数</button><button data-action="count" data-key="${key}">计数 +1</button></div></article>`;
+    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div></button><div class="practice-actions"><button data-action="report" data-key="${key}" aria-label="报数" title="报数">⊕</button><button data-action="count" data-key="${key}" aria-label="计数一次" title="计数一次">＋</button></div></article>`;
     document.getElementById('view-today').innerHTML=`<div class="page-intro"><h1 id="today-title">日课</h1></div>${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
   }
   function daoReader() {
@@ -100,7 +101,7 @@
     const countKey=isHeart?'xinCount':'daoCount';
     const todayCount=day()[countKey];
     const content=isHeart ? `<div class="classic-text recitation-text">${HEART.map(segment=>esc(segment.text)).join('\n')}</div><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><div class="chapter-position">${reciteChapter} / 81</div><h2>第${reciteChapter}章</h2><div class="classic-text recitation-text">${esc(c.text)}</div><details class="annotation-fold"><summary>本章注释</summary><p>${esc(c.note)}</p></details><div class="chapter-controls"><button data-action="swipe-prev" ${reciteChapter===1?'disabled':''}>← 上一章</button><button data-action="swipe-next" ${reciteChapter===81?'disabled':''}>下一章 →</button></div></div>`;})();
-    node.innerHTML=`<div class="recitation-screen"><button class="back-button" data-action="back-recitation">‹　返回</button><h1>${bookName}</h1><div class="recitation-origin">完整经文 · 慢慢背诵</div>${content}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span><button class="text-button" data-action="undo" data-key="${countKey}">撤销</button></div><button class="text-button report-inside" data-action="report" data-key="${countKey}">报数</button><button class="tap-button ${isHeart?'cinnabar':''}" data-action="count" data-key="${countKey}">点一下 · 完成一遍</button></div></div>`;
+    node.innerHTML=`<div class="recitation-screen" style="--text-size:${textSize}px"><div class="recite-header"><button class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1>${bookName}</h1><div class="font-controls"><button data-action="font-smaller" aria-label="缩小字体">A−</button><button data-action="font-larger" aria-label="放大字体">A＋</button></div></div>${content}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span></div><div class="recite-tools"><button class="tool-icon" data-action="undo" data-key="${countKey}" aria-label="撤销一次" title="撤销一次">↶</button><button class="woodfish" data-action="count" data-key="${countKey}" aria-label="计数一次"><svg viewBox="0 0 100 90" aria-hidden="true"><path d="M17 50 C14 25 29 12 52 13 C73 14 87 29 84 51 C82 70 70 76 50 76 C30 76 19 69 17 50Z" fill="#a6673e" stroke="#784628" stroke-width="3"/><path d="M28 50 Q49 58 73 50 M32 59 Q50 64 69 59" fill="none" stroke="#714025" stroke-width="4" stroke-linecap="round"/><path d="M73 15 L91 3" stroke="#784628" stroke-width="5" stroke-linecap="round"/><circle cx="71" cy="17" r="5" fill="#784628"/></svg></button><button class="tool-icon" data-action="report" data-key="${countKey}" aria-label="报数" title="报数">＋</button></div></div></div>`;
   }
   function updateReciteProgress(key) {
     const todayCount=document.getElementById('recite-today-count');
@@ -138,6 +139,7 @@
     if (action === 'swipe-prev' && reciteChapter>1) { reciteChapter--; renderRecite(); window.scrollTo(0,0); }
     if (action === 'swipe-next' && reciteChapter<81) { reciteChapter++; renderRecite(); window.scrollTo(0,0); }
     if (action === 'report') { const value=prompt('请输入本次背诵的遍数'); if(value!==null && /^\d+$/.test(value.trim()) && Number(value)>0 && Number(value)<=100000){const key=button.dataset.key;day()[key]+=Number(value);saveState();if(route==='recite'&&reciteBook)updateReciteProgress(key);else render();} else if(value!==null) showToast('请输入大于零的整数'); }
+    if (action === 'font-smaller' || action === 'font-larger') { textSize=Math.max(10,Math.min(28,textSize+(action==='font-larger'?1:-1))); localStorage.setItem('rikey.fontSize',textSize); document.querySelector('.recitation-screen').style.setProperty('--text-size',textSize+'px'); }
     if (action === 'book') { readingBook=button.dataset.book; renderRead(); }
     if (action === 'chapter') { chapterNumber=Number(button.dataset.number); renderRead(); }
     if (action === 'prev-chapter' && chapterNumber>1) { chapterNumber--; renderRead(); }
