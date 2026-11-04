@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>日课 · 视觉规范 v4 设计稿</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --paper:#F5F7F2;--paper-deep:#E9EFE7;--card:#FFFFFF;--line:#E1E9DF;--line-strong:#C9D8CC;
+    --ink:#1F3329;--ink-2:#4A5C51;--muted:#87958B;
+    --green:#2F5D50;--green-soft:#E7F0E9;
+    --cinnabar:#C0533B;--cinnabar-ink:#993C1D;--cinnabar-soft:#FBF1EC;--cinnabar-line:#EEDFD3;
+    --heat-0:#EDF1EC;--heat-1:#BFD6C5;--heat-2:#7FAE92;--heat-3:#2F5D50;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+  }
+  body{font-family:var(--font);background:#E7EBE4;color:var(--ink);padding:36px 40px 48px}
+  .canvas{width:1280px;margin:0 auto}
+  .masthead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px}
+  .eyebrow{font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+  .masthead h1{font-size:28px;font-weight:500;letter-spacing:-.02em;margin-top:8px}
+  .masthead .meta{font-size:12px;color:var(--muted);text-align:right;line-height:1.9}
+  .board{display:flex;gap:22px;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .col-label{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+  .col-label b{font-size:11px;font-weight:500;color:var(--cinnabar);border:1px solid var(--cinnabar-line);background:var(--cinnabar-soft);border-radius:999px;padding:2px 8px}
+  .phone{width:375px;height:812px;background:var(--paper);border:1px solid #D3DBD2;border-radius:26px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .screen{padding:22px 20px 84px;overflow:hidden;flex:1}
+  .page-head{margin-bottom:18px}
+  .page-head h2{font-size:24px;font-weight:500;line-height:32px;letter-spacing:-.02em;margin-top:4px;font-family:"Songti SC","Noto Serif CJK SC",serif}
+  .page-head .date{font-size:12px;color:var(--muted);margin-top:2px}
+  .hero{background:var(--cinnabar-soft);border:1px solid var(--cinnabar-line);border-radius:16px;padding:18px;margin-bottom:14px}
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between}
+  .hero-num{font-size:40px;font-weight:500;line-height:44px;letter-spacing:-.03em;color:var(--ink);margin-top:8px;font-variant-numeric:tabular-nums}
+  .hero-num small{font-size:12px;font-weight:400;color:var(--muted);margin-left:5px;letter-spacing:0}
+  .hero-sub{font-size:12px;color:var(--ink-2);margin-top:4px}
+  .seal{width:56px;height:56px;border-radius:50%;background:var(--cinnabar);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+  .seal b{font-size:24px;font-weight:500;line-height:26px;font-variant-numeric:tabular-nums}
+  .seal span{font-size:10px;opacity:.9;margin-top:1px}
+  .cta{display:block;width:100%;height:46px;line-height:46px;text-align:center;background:var(--cinnabar);color:#fff;border-radius:12px;font-size:14px;margin-top:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .card h3{font-size:14px;font-weight:500;margin-bottom:12px}
+  .card h3 em{font-style:normal;font-size:11px;color:var(--muted);float:right;font-weight:400;margin-top:3px}
+  .row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:0;padding-top:2px}
+  .mark{width:40px;height:40px;border-radius:10px;background:var(--green-soft);color:var(--green);font-size:15px;display:flex;align-items:center;justify-content:center;flex:none}
+  .row .info{flex:1}
+  .row .info b{display:block;font-size:14px;font-weight:500}
+  .row .info span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .row .arrow{font-size:20px;color:var(--muted)}
+  .bars{display:flex;align-items:flex-end;gap:10px;height:56px;margin-top:4px}
+  .bars i{flex:1;border-radius:3px 3px 0 0;display:block}
+  .week{display:flex;gap:10px;margin-top:6px}
+  .week span{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+  .verse{text-align:center;font-size:11px;color:var(--muted);line-height:20px;margin-top:18px}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:64px;background:var(--card);border-top:1px solid var(--line);display:flex}
+  .nav div{flex:1;text-align:center;font-size:11px;color:var(--muted);padding-top:12px}
+  .nav div.on{color:var(--green);font-weight:500}
+  .nav div b{display:block;font-size:17px;font-weight:400;line-height:20px}
+  .segmented{display:flex;background:var(--paper-deep);border-radius:999px;padding:3px;margin-bottom:14px}
+  .segmented span{flex:1;text-align:center;font-size:12px;padding:7px 0;color:var(--muted);border-radius:999px}
+  .segmented span.on{background:var(--card);color:var(--green);font-weight:500}
+  .streak-card{background:var(--cinnabar-soft);border:1px solid var(--cinnabar-line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .streak-top{display:flex;align-items:center;gap:13px}
+  .streak-top b{font-size:14px;font-weight:500;display:block}
+  .streak-top span{font-size:11px;color:var(--cinnabar-ink);display:block;margin-top:4px}
+  .metrics{display:flex;border-top:1px solid var(--cinnabar-line);margin-top:14px;padding-top:12px}
+  .metrics div{flex:1;text-align:center;border-right:1px solid var(--cinnabar-line)}
+  .metrics div:last-child{border-right:0}
+  .metrics span{display:block;font-size:11px;color:var(--muted)}
+  .metrics b{display:block;font-size:20px;font-weight:500;margin-top:3px;font-variant-numeric:tabular-nums}
+  .metrics b small{font-size:11px;font-weight:400;color:var(--muted);margin-left:2px}
+  .heat{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+  .heat i{height:18px;border-radius:3px;background:var(--heat-0);display:block}
+  .heat i.l1{background:var(--heat-1)}.heat i.l2{background:var(--heat-2)}.heat i.l3{background:var(--heat-3)}
+  .heat i.sel{outline:2px solid var(--green);outline-offset:1px}
+  .legend{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:12px;font-size:11px;color:var(--muted)}
+  .legend i{width:10px;height:10px;border-radius:2px;display:block}
+  .editor{border-top:1px solid var(--line);margin-top:12px;padding:12px 0 0;font-size:12px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center}
+  .editor b{font-weight:500}
+  .editor span{color:var(--muted);font-size:11px}
+  /* 统计页密度：保证近 7 日卡在 812 高度内完整可见 */
+  .stats .screen{padding-top:18px;padding-bottom:70px}
+  .stats .page-head{margin-bottom:12px}
+  .stats .segmented{margin-bottom:10px}
+  .stats .streak-card{padding:14px;margin-bottom:10px}
+  .stats .metrics{margin-top:10px;padding-top:10px}
+  .stats .card{padding:14px;margin-bottom:10px}
+  .stats .card h3{margin-bottom:10px}
+  .stats .heat{gap:3px}
+  .stats .heat i{height:15px}
+  .stats .legend{margin-top:8px}
+  .stats .editor{margin-top:8px;padding-top:10px}
+  .stats .bars{height:44px}
+  /* 规范板 */
+  .spec{width:390px;background:var(--card);border:1px solid #D3DBD2;border-radius:20px;padding:22px;min-height:812px}
+  .spec h2{font-size:20px;font-weight:500;margin:6px 0 20px}
+  .spec h4{font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:22px 0 10px;font-weight:500}
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .sw{text-align:left}
+  .sw i{display:block;height:44px;border-radius:8px;border:1px solid var(--line)}
+  .sw b{display:block;font-size:10px;font-weight:500;margin-top:5px}
+  .sw span{display:block;font-size:10px;color:var(--muted)}
+  .type-row{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);padding:8px 0}
+  .type-row b{font-weight:500;white-space:nowrap}
+  .type-row span{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+  .comp{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .btn-main{background:var(--cinnabar);color:#fff;font-size:12px;border-radius:12px;padding:11px 18px}
+  .btn-ghost{border:1px solid var(--line-strong);color:var(--ink);font-size:12px;border-radius:12px;padding:10px 16px}
+  .input{border:1px solid var(--line-strong);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);width:130px}
+  .foot{margin-top:26px;font-size:11px;color:var(--muted);line-height:1.9;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="masthead">
+    <div><div class="eyebrow">Rikey / Design system v4</div><h1>日课 · 视觉规范 v4</h1></div>
+    <div class="meta">墨绿静气 · 朱砂点心<br>375 × 812 · 2026.11</div>
+  </div>
+
+  <div class="board">
+    <!-- 01 首页 -->
+    <div class="col">
+      <div class="col-label"><b>01</b> 首页 / 今日 · 重做主次</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="page-head"><div class="eyebrow">日课 · RIKEY</div><h2>十一月四日</h2><div class="date">星期三 · 宜诵读</div></div>
+
+          <div class="hero">
+            <div class="hero-top">
+              <div><div class="eyebrow">今日修习</div><div class="hero-num">7<small>遍</small></div><div class="hero-sub">心经 5 · 道德经 2　|　时长 42 分</div></div>
+              <div class="seal"><b>12</b><span>连续日</span></div>
+            </div>
+            <div class="cta">＋ 记一遍心经</div>
+          </div>
+
+          <div class="card">
+            <h3>今日两课<em>累计 166 遍</em></h3>
+            <div class="row"><div class="mark">心</div><div class="info"><b>般若波罗蜜多心经</b><span>今日 5 遍 · 累计 166 遍 · 42 分</span></div><div class="arrow">›</div></div>
+            <div class="row"><div class="mark">道</div><div class="info"><b>道德经</b><span>今日 2 遍 · 累计 83 遍 · 18 分</span></div><div class="arrow">›</div></div>
+          </div>
+
+          <div class="card">
+            <h3>近七日<em>日均 5 遍</em></h3>
+            <div class="bars"><i style="height:28px;background:var(--heat-1)"></i><i style="height:44px;background:var(--heat-2)"></i><i style="height:20px;background:var(--heat-1)"></i><i style="height:52px;background:var(--heat-3)"></i><i style="height:34px;background:var(--heat-1)"></i><i style="height:24px;background:var(--heat-1)"></i><i style="height:46px;background:var(--cinnabar)"></i></div>
+            <div class="week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span style="color:var(--cinnabar)">日</span></div>
+          </div>
+
+          <div class="verse">「 日日行，不怕千万里 」<br>今天也留一页给自己</div>
+        </div>
+        <div class="nav"><div class="on"><b>⌂</b>首页</div><div><b>▥</b>统计</div><div><b>◉</b>我的</div></div>
+      </div>
+    </div>
+
+    <!-- 02 统计 -->
+    <div class="col">
+      <div class="col-label"><b>02</b> 统计 · 连续徽章 / 热力 / 趋势</div>
+      <div class="phone stats">
+        <div class="screen">
+          <div class="page-head"><div class="eyebrow">STATISTICS</div><h2>修习统计</h2><div class="date">2026 年 11 月</div></div>
+
+          <div class="segmented"><span class="on">心经</span><span>道德经</span></div>
+
+          <div class="streak-card">
+            <div class="streak-top">
+              <div class="seal"><b>12</b><span>连续日</span></div>
+              <div><b>连续日课 12 天</b><span>最长的坚持 · 历史 21 天</span></div>
+            </div>
+            <div class="metrics">
+              <div><span>今日</span><b style="color:var(--cinnabar)">7<small>遍</small></b></div>
+              <div><span>本月</span><b>17<small>遍</small></b></div>
+              <div><span>累计</span><b>166<small>遍</small></b></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>修习热力<em>近 12 周</em></h3>
+            <div class="heat">
+              <i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l3"></i><i></i>
+              <i class="l2"></i><i class="l3"></i><i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i class="l3"></i><i class="l2"></i><i></i><i class="l1"></i><i class="l3"></i><i class="l2"></i>
+              <i class="l3"></i><i class="l2"></i><i></i><i class="l1"></i><i class="l3"></i><i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l2"></i>
+              <i></i><i class="l1"></i><i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l3"></i><i></i><i class="l2"></i><i class="l1"></i>
+              <i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l2"></i><i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l3"></i>
+              <i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l3"></i><i class="l2"></i><i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i>
+              <i class="l1"></i><i class="l3"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l2"></i><i class="l3 sel"></i><i class="l2"></i><i class="l1"></i>
+            </div>
+            <div class="legend">少<i style="background:var(--heat-0)"></i><i style="background:var(--heat-1)"></i><i style="background:var(--heat-2)"></i><i style="background:var(--heat-3)"></i>多</div>
+            <div class="editor"><b>修改本日记录</b><span>2026-11-04 ›</span></div>
+          </div>
+
+          <div class="card">
+            <h3>近 7 日<em>共 37 遍</em></h3>
+            <div class="bars"><i style="height:24px;background:var(--heat-1)"></i><i style="height:38px;background:var(--heat-2)"></i><i style="height:18px;background:var(--heat-1)"></i><i style="height:48px;background:var(--heat-3)"></i><i style="height:30px;background:var(--heat-2)"></i><i style="height:20px;background:var(--heat-1)"></i><i style="height:42px;background:var(--cinnabar)"></i></div>
+            <div class="week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span style="color:var(--cinnabar)">日</span></div>
+          </div>
+
+        </div>
+        <div class="nav"><div><b>⌂</b>首页</div><div class="on"><b>▥</b>统计</div><div><b>◉</b>我的</div></div>
+      </div>
+    </div>
+
+    <!-- 03 规范板 -->
+    <div class="col">
+      <div class="col-label"><b>03</b> 设计 Token / 组件</div>
+      <div class="spec">
+        <div class="eyebrow">Foundations</div>
+        <h2>墨绿静气，朱砂点心</h2>
+        <h4>Color</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#2F5D50"></i><b>墨绿</b><span>#2F5D50</span></div>
+          <div class="sw"><i style="background:#C0533B"></i><b>朱砂</b><span>#C0533B</span></div>
+          <div class="sw"><i style="background:#F5F7F2"></i><b>纸</b><span>#F5F7F2</span></div>
+          <div class="sw"><i style="background:#1F3329"></i><b>墨</b><span>#1F3329</span></div>
+          <div class="sw"><i style="background:#EDF1EC"></i><b>热力 0</b><span>#EDF1EC</span></div>
+          <div class="sw"><i style="background:#BFD6C5"></i><b>热力 1</b><span>#BFD6C5</span></div>
+          <div class="sw"><i style="background:#7FAE92"></i><b>热力 2</b><span>#7FAE92</span></div>
+          <div class="sw"><i style="background:#FBF1EC"></i><b>朱砂浅</b><span>#FBF1EC</span></div>
+        </div>
+        <h4>Typography</h4>
+        <div class="type-row"><b style="font-size:40px;line-height:44px">40</b><span>Display 44 / 500</span></div>
+        <div class="type-row"><b style="font-size:24px;line-height:32px">页面标题</b><span>H1 24 / 32</span></div>
+        <div class="type-row"><b style="font-size:17px;line-height:24px">区块标题</b><span>H2 17 / 24</span></div>
+        <div class="type-row"><b style="font-size:14px">正文与列表</b><span>Body 14 / 22</span></div>
+        <div class="type-row"><b style="font-size:11px;color:var(--muted)">图例与脚注</b><span>Micro 11 / 16</span></div>
+        <h4>Components</h4>
+        <div class="comp"><div class="seal" style="width:48px;height:48px"><b style="font-size:20px">12</b><span>连续日</span></div><span style="font-size:11px;color:var(--muted)">连续徽章 · 56px 朱砂圆</span></div>
+        <div class="comp"><div class="btn-main">＋ 记一遍心经</div><div class="btn-ghost">次按钮</div></div>
+        <div class="comp"><div class="input">00:17:00</div><span style="font-size:11px;color:var(--muted)">输入框必有描边</span></div>
+        <div class="comp" style="gap:4px"><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-0)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-1)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-2)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-3)"></i><span style="font-size:11px;color:var(--muted);margin-left:8px">热力四级</span></div>
+        <h4>Rules</h4>
+        <div style="font-size:12px;line-height:2;color:var(--ink-2)">每屏一个主角 · 全站一个强调色<br>数字与单位分层 · 时长不折行<br>无阴影 / 无渐变 / 无新色相<br>可编辑元素一眼可辨</div>
+        <div class="foot">规范全文见仓库 DESIGN.md<br>基准视口 375 × 812 · 内容最大宽 660px</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

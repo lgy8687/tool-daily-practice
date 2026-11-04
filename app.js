@@ -101,9 +101,92 @@
     const xin = current.readings.includes('heart');
     return [dao ? `《道德经》${dao}章` : '', xin ? '《心经》' : ''].filter(Boolean).join(' · ');
   }
+  /* ===== v4 视觉系统：数据工具（见 DESIGN.md） ===== */
+  function dayValue(date, book) {
+    const item = state.days[date] || blankDay();
+    const n = book === 'all'
+      ? (Number(item.xinCount) || 0) + (Number(item.daoCount) || 0)
+      : (Number(item[book === 'heart' ? 'xinCount' : 'daoCount']) || 0);
+    const ms = book === 'all'
+      ? (Number(item.readingMs?.heart) || 0) + (Number(item.readingMs?.dao) || 0)
+      : (Number(item.readingMs?.[book]) || 0);
+    return { n, ms };
+  }
+  function hasPractice(date, book) { const v = dayValue(date, book); return v.n > 0 || v.ms > 0; }
+  function heatLevel(v) {
+    if (!v.n && !v.ms) return 0;
+    if (v.n >= 6 || v.ms >= 1800000) return 3;
+    if (v.n >= 3) return 2;
+    return 1;
+  }
+  function calcStreak(book) {
+    const cursor = new Date(); cursor.setHours(12, 0, 0, 0);
+    if (!hasPractice(localDate(cursor), book)) cursor.setDate(cursor.getDate() - 1);
+    let count = 0;
+    while (hasPractice(localDate(cursor), book) && count < 3660) { count++; cursor.setDate(cursor.getDate() - 1); }
+    return count;
+  }
+  function calcBest(book) {
+    const dates = Object.keys(state.days).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && hasPractice(date, book)).sort();
+    let best = 0, run = 0, prev = null;
+    dates.forEach(date => {
+      run = prev && (new Date(date + 'T12:00:00') - new Date(prev + 'T12:00:00')) === 86400000 ? run + 1 : 1;
+      if (run > best) best = run;
+      prev = date;
+    });
+    return Math.max(best, calcStreak(book));
+  }
+  function formatDurationShort(ms) {
+    const minutes = Math.floor(Math.max(0, ms) / 60000), h = Math.floor(minutes / 60), m = minutes % 60;
+    return h ? `${h}时${String(m).padStart(2, '0')}分` : `${m}分`;
+  }
+  function trendBars(book, days) {
+    const dates = lastDays(days), values = dates.map(date => dayValue(date, book).n);
+    const max = Math.max(1, ...values), week = ['日', '一', '二', '三', '四', '五', '六'];
+    const bars = values.map((value, i) => {
+      const isToday = i === values.length - 1;
+      return `<i class="trend-bar${isToday ? ' is-today' : ''}" style="height:${Math.max(10, Math.round(value / max * 42))}px" title="${dates[i]} · ${value} 遍"></i>`;
+    }).join('');
+    const labels = dates.map((date, i) => `<span class="${i === dates.length - 1 ? 'is-today' : ''}">${week[new Date(date + 'T12:00:00').getDay()]}</span>`).join('');
+    return { bars, labels, total: values.reduce((a, b) => a + b, 0), avg: Math.round(values.reduce((a, b) => a + b, 0) / days) };
+  }
+
   function renderToday() {
-    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div><div class="practice-time">今日时长　${formatDuration(day().readingMs?.[book]||0)}</div></button></article>`;
-    document.getElementById('view-today').innerHTML=`${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
+    const today = day();
+    const heart = Number(today.xinCount) || 0, dao = Number(today.daoCount) || 0;
+    const totalToday = heart + dao;
+    const msToday = (Number(today.readingMs?.heart) || 0) + (Number(today.readingMs?.dao) || 0);
+    const now = new Date(), weekNames = ['日', '一', '二', '三', '四', '五', '六'];
+    const streak = calcStreak('all'), trend = trendBars('all', 7);
+    const course = (name, book, key, mark, count) => `<button class="course-row" data-action="open-recitation" data-book="${book}"><span class="course-mark">${mark}</span><span class="course-info"><b>${name}</b><small>今日 ${count} 遍 · 累计 ${sum(key)} 遍 · ${formatDurationShort(Number(today.readingMs?.[book]) || 0)}</small></span><span class="course-arrow">›</span></button>`;
+    document.getElementById('view-today').innerHTML = `<header class="page-head">
+        <span class="eyebrow">日课 · RIKEY</span>
+        <h1 id="today-title">${now.getMonth() + 1} 月 ${now.getDate()} 日</h1>
+        <p class="page-head-date">星期${weekNames[now.getDay()]} · 宜诵读</p>
+      </header>
+      <section class="hero-card">
+        <div class="hero-top">
+          <div class="hero-main">
+            <span class="eyebrow">今日修习</span>
+            <div class="hero-number">${totalToday}<small>遍</small></div>
+            <p class="hero-sub">心经 ${heart} · 道德经 ${dao}　|　时长 ${formatDurationShort(msToday)}</p>
+          </div>
+          <div class="streak-seal"><b>${streak}</b><span>连续日</span></div>
+        </div>
+        <button class="hero-cta" data-action="count" data-key="xinCount">＋ 记一遍心经</button>
+        <p class="hero-foot">历史最佳 ${calcBest('all')} 天 · 累计 ${sum('xinCount') + sum('daoCount')} 遍</p>
+      </section>
+      <section class="ds-card">
+        <div class="card-head"><h2>今日两课</h2><span>点按进入背诵</span></div>
+        ${course('般若波罗蜜多心经', 'heart', 'xinCount', '心', heart)}
+        ${course('道德经', 'dao', 'daoCount', '道', dao)}
+      </section>
+      <section class="ds-card">
+        <div class="card-head"><h2>近七日</h2><span>日均 ${trend.avg} 遍 · 共 ${trend.total} 遍</span></div>
+        <div class="trend-bars">${trend.bars}</div>
+        <div class="trend-week">${trend.labels}</div>
+      </section>
+      <p class="daily-verse">「 日日行，不怕千万里 」<br>今天也留一页给自己</p>`;
   }
   function daoReader() {
     const chapter = window.DAO_DE_JING.chapters[chapterNumber - 1];
@@ -206,32 +289,60 @@
     return items;
   }
   function renderStats(preserveInputs=false) {
-    const book=statsBook, countKey=book==='heart'?'xinCount':'daoCount';
+    const book=statsBook;
     const year=statsMonth.getFullYear(), month=statsMonth.getMonth();
     const monthPrefix=`${year}-${String(month+1).padStart(2,'0')}`;
     const all=Object.entries(state.days).filter(([date])=>/^\d{4}-\d{2}-\d{2}$/.test(date));
     const thisMonth=all.filter(([date])=>date.startsWith(monthPrefix+'-'));
-    const totals=entries=>entries.reduce((acc,[,item])=>{const n=Number(item[countKey])||0,ms=Number(item.readingMs?.[book])||0;acc.count+=n;acc.ms+=ms;if(n>0||ms>0)acc.days++;return acc;},{count:0,ms:0,days:0});
+    const totals=entries=>entries.reduce((acc,[date])=>{const v=dayValue(date,book);acc.count+=v.n;acc.ms+=v.ms;if(v.n>0||v.ms>0)acc.days++;return acc;},{count:0,ms:0,days:0});
     const allStats=totals(all), monthStats=totals(thisMonth), todayStats=totals([[localDate(),state.days[localDate()]||blankDay()]]);
-    const hasPractice=date=>{const d=state.days[date]||blankDay();return (Number(d[countKey])||0)>0 || (Number(d.readingMs?.[book])||0)>0;};
-    const streakDay=new Date(); streakDay.setHours(12,0,0,0); if(!hasPractice(localDate(streakDay)))streakDay.setDate(streakDay.getDate()-1);
-    let streak=0; while(hasPractice(localDate(streakDay))) { streak++; streakDay.setDate(streakDay.getDate()-1); }
+    const streak=calcStreak(book), best=calcBest(book);
     const selected=state.days[statsSelectedDate]||blankDay();
-    const offset=(new Date(year,month,1).getDay()+6)%7, maxDay=new Date(year,month+1,0).getDate(), today=localDate();
-    const blanks=Array.from({length:offset},()=>'<span class="calendar-blank"></span>').join('');
-    const calendar=Array.from({length:maxDay},(_,i)=>{const n=i+1,date=`${monthPrefix}-${String(n).padStart(2,'0')}`,item=state.days[date]||blankDay(),hasRecord=(Number(item.daoCount)||0)>0||(Number(item.xinCount)||0)>0||(Number(item.readingMs?.dao)||0)>0||(Number(item.readingMs?.heart)||0)>0,isFuture=date>today;return `<button class="calendar-day ${date===statsSelectedDate?'selected':''} ${date===today?'today':''}" data-action="stats-day" data-date="${date}" aria-label="${date}${hasRecord?'，有记录':''}" ${isFuture?'disabled':''}><span>${n}</span>${hasRecord?'<i></i>':''}</button>`;}).join('');
     const isCurrentMonth=year===new Date().getFullYear() && month===new Date().getMonth();
-    const cell=(label,obj)=>`<div class="report-cell"><span>${label}</span><b>${obj.count}<small> 遍</small></b><em>${formatDuration(obj.ms)}</em></div>`;
-    const reportHtml=`<div class="report-header"><h1 id="stats-title">统计</h1></div>
-      <div class="report-tabs" role="group" aria-label="选择经典"><button data-action="stats-book" data-book="heart" class="${book==='heart'?'active':''}" aria-pressed="${book==='heart'}">心经</button><button data-action="stats-book" data-book="dao" class="${book==='dao'?'active':''}" aria-pressed="${book==='dao'}">道德经</button></div>
-      <section class="report-summary"><div class="report-section-title"><h2>修习概览</h2><span>累计 ${allStats.days} 天 · 连续 ${streak} 天</span></div><div class="report-cells">${cell('今日',todayStats)}${cell(isCurrentMonth?'本月':'当月',monthStats)}${cell('累计',allStats)}</div><div class="report-month-days">${year} 年 ${month+1} 月　·　修习 ${monthStats.days} 天</div></section>
-      <section class="report-calendar"><div class="calendar-heading"><h2>日历</h2><div class="calendar-month"><button data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="calendar-grid calendar-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid calendar-days">${blanks}${calendar}</div><div class="calendar-legend"><i></i> 有记录</div><div class="calendar-values"><div class="calendar-value-row"><span>心经</span><label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="heart" value="${Number(selected.xinCount)||0}" aria-label="心经次数"><small>遍</small></label><input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="heart" value="${recordTime(selected.readingMs?.heart||0)}" aria-label="心经时长，时分秒"></div><div class="calendar-value-row"><span>道德经</span><label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="dao" value="${Number(selected.daoCount)||0}" aria-label="道德经次数"><small>遍</small></label><input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="dao" value="${recordTime(selected.readingMs?.dao||0)}" aria-label="道德经时长，时分秒"></div></div></section>`;
+    const today=localDate();
+    const metric=(label,obj,accent=false)=>`<div class="metric${accent?' is-today':''}"><span>${label}</span><b>${obj.count}<small>遍</small></b><em>${formatDurationShort(obj.ms)}</em></div>`;
+    const trend=trendBars(book,7);
+
+    /* 12 周 × 7 天热力格：以所选月份最后一周为锚，列优先填充 */
+    const monthEnd=new Date(year,month+1,0,12);
+    const endOffset=(monthEnd.getDay()+6)%7;
+    const firstDay=new Date(monthEnd); firstDay.setDate(monthEnd.getDate()-endOffset-77);
+    let heat='';
+    for(let w=0;w<12;w++) for(let dow=0;dow<7;dow++) {
+      const cursor=new Date(firstDay); cursor.setDate(firstDay.getDate()+w*7+dow);
+      const date=localDate(cursor), v=dayValue(date,book), level=heatLevel(v), future=date>today;
+      heat+=`<button class="heat-cell level-${level}${date===statsSelectedDate?' selected':''}${date===today?' is-today':''}" data-action="stats-day" data-date="${date}" aria-label="${date} · ${v.n} 遍 · ${formatDurationShort(v.ms)}" ${future?'disabled':''}></button>`;
+    }
+
+    const recordRow=(name,bookKey,countKey)=>`<div class="record-row"><span>${name}</span><label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="${bookKey}" value="${Number(selected[countKey])||0}" aria-label="${name}次数"><small>遍</small></label><input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="${bookKey}" value="${recordTime(selected.readingMs?.[bookKey]||0)}" aria-label="${name}时长，时分秒"></div>`;
+    const reportHtml=`<header class="page-head"><span class="eyebrow">STATISTICS</span><h1 id="stats-title">修习统计</h1><p class="page-head-date">${year} 年 ${month+1} 月 · 累计 ${allStats.days} 天</p></header>
+      <div class="segmented" role="group" aria-label="选择经典"><button data-action="stats-book" data-book="heart" class="${book==='heart'?'active':''}" aria-pressed="${book==='heart'}">心经</button><button data-action="stats-book" data-book="dao" class="${book==='dao'?'active':''}" aria-pressed="${book==='dao'}">道德经</button></div>
+      <section class="streak-card">
+        <div class="streak-top"><div class="streak-seal"><b>${streak}</b><span>连续日</span></div><div class="streak-copy"><h2>连续日课 ${streak} 天</h2><p>最长的坚持 · 历史 ${best} 天</p></div></div>
+        <div class="metrics">${metric('今日',todayStats,true)}${metric(isCurrentMonth?'本月':'当月',monthStats)}${metric('累计',allStats)}</div>
+      </section>
+      <section class="ds-card">
+        <div class="card-head"><h2>修习热力</h2><div class="month-switch"><button data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div>
+        <div class="heat-grid">${heat}</div>
+        <div class="heat-legend"><span>少</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><span>多</span></div>
+        <details class="record-editor"><summary><span>修改本日记录</span><span class="editor-meta">${statsSelectedDate} ›</span></summary><div class="record-fields">${recordRow('心经','heart','xinCount')}${recordRow('道德经','dao','daoCount')}</div></details>
+      </section>
+      <section class="ds-card trend-card">
+        <div class="card-head"><h2>近 7 日</h2><span>共 ${trend.total} 遍</span></div>
+        <div class="trend-bars">${trend.bars}</div><div class="trend-week">${trend.labels}</div>
+      </section>`;
     const root=document.getElementById('view-stats');
-    if (!preserveInputs || !root.querySelector('.calendar-values')) { root.innerHTML=reportHtml; return; }
-    const fresh=document.createElement('div'); fresh.innerHTML=reportHtml;
-    root.querySelector('.report-summary').innerHTML=fresh.querySelector('.report-summary').innerHTML;
-    const oldDay=root.querySelector('.calendar-day.selected'), newDay=fresh.querySelector('.calendar-day.selected');
-    if(oldDay&&newDay) { oldDay.innerHTML=newDay.innerHTML; oldDay.setAttribute('aria-label',newDay.getAttribute('aria-label')); }
+    if (preserveInputs && root.querySelector('.record-editor')) {
+      const fresh=document.createElement('div'); fresh.innerHTML=reportHtml;
+      const oldCard=root.querySelector('.streak-card'), newCard=fresh.querySelector('.streak-card');
+      if(oldCard&&newCard) oldCard.innerHTML=newCard.innerHTML;
+      const oldCells=root.querySelectorAll('.heat-cell'), newCells=fresh.querySelectorAll('.heat-cell');
+      oldCells.forEach((cell,i)=>{const next=newCells[i];if(next){cell.className=next.className;cell.setAttribute('aria-label',next.getAttribute('aria-label'));}});
+      const oldTrend=root.querySelector('.trend-card'), newTrend=fresh.querySelector('.trend-card');
+      if(oldTrend&&newTrend) oldTrend.innerHTML=newTrend.innerHTML;
+      return;
+    }
+    root.innerHTML=reportHtml;
   }
   function render() {
     renderToday(); renderRead(); renderRecite(); renderStats();
