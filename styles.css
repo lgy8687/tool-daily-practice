@@ -338,3 +338,13 @@ body { background:var(--paper); }
 .chapter-tile:focus-visible { outline:2px solid #315a41; outline-offset:3px; }
 .reading-timer { color:var(--muted); font-size:11px; text-align:right; padding:0 2px 8px; font-variant-numeric:tabular-nums; }
 .reading-totals { color:var(--muted); font-size:12px; padding:10px 0 0; }
+.layout-content p,.recitation-screen .annotation-fold .layout-content p { margin:0 0 .85em; padding:0; color:inherit; font:inherit; line-height:inherit; }
+.layout-content p:last-child { margin-bottom:0; }
+.translation-layout { color:#414941; font-size:max(16px,var(--text-size)); line-height:1.8; }
+.layout-content[contenteditable="true"] { outline:1px solid #9dbba4; border-radius:8px; padding:10px; background:#fffefa; min-height:3em; }
+.layout-toolbar { display:none; position:sticky; top:53px; z-index:19; align-items:center; gap:3px; overflow-x:auto; background:#edf5eb; padding:6px 2px; border-bottom:1px solid #dce9de; }
+.editing-layout .layout-toolbar { display:flex; }
+.layout-toolbar button { border:0; background:transparent; color:#315a41; min-width:40px; height:40px; font-size:17px; cursor:pointer; }
+.layout-toolbar .layout-restore { white-space:nowrap; font-size:12px; padding:0 8px; margin-left:auto; }
+.editing-layout .recite-footer { display:none; }
+.editing-layout .layout-content { scroll-margin-top:110px; }

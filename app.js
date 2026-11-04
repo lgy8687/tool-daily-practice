@@ -14,6 +14,7 @@
   let reciteChapter = 1;
   const fontKey = () => reciteBook === 'heart' ? 'rikey.fontSize.heart' : `rikey.fontSize.dao.${reciteChapter}`;
   const currentFontSize = () => Number(localStorage.getItem(fontKey())) || 18;
+  let layoutEditing = false;
   let chapterNumber = 1;
   let toastTimer;
 
@@ -75,6 +76,7 @@
   function routeTo(name) {
     flushTimer(true);
     route = name;
+    layoutEditing=false;
     reciteBook = null;
     document.querySelector('.app-shell').classList.remove('immersive');
     document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${name}`));
@@ -109,6 +111,48 @@
   function renderRead() {
     document.getElementById('view-read').innerHTML = `<div class="page-intro"><h1 id="read-title">读经典</h1></div><div class="switcher"><button class="pill ${readingBook === 'dao' ? 'active' : ''}" data-action="book" data-book="dao">《道德经》</button><button class="pill ${readingBook === 'heart' ? 'active' : ''}" data-action="book" data-book="heart">《心经》</button></div>${readingBook === 'dao' ? daoReader() : heartReader()}<p class="source-note">《道德经》王弼本，简体转换；注释为白话导读。<br>《心经》玄奘译本。<br><a href="https://zh.wikisource.org/zh-hans/道德经_(王弼本)" target="_blank" rel="noreferrer">原文来源</a> · <a href="https://zh.wikisource.org/zh-hans/般若波罗蜜多心经_(玄奘)" target="_blank" rel="noreferrer">心经来源</a></p>`;
   }
+  function layoutBaseKey() { return reciteBook === 'heart' ? 'heart' : `dao:${reciteChapter}`; }
+  function defaultLayout(text) {
+    const parts=(text || '').replace(/\n/g,'').match(/[^。！？；]*[。！？；]|[^。！？；]+$/g) || [];
+    const paragraphs=[];
+    for(let i=0;i<parts.length;i+=2) paragraphs.push(`<p>${esc(parts.slice(i,i+2).join(''))}</p>`);
+    return paragraphs.join('');
+  }
+  function cleanLayout(html) {
+    const container=document.createElement('div'); container.innerHTML=html;
+    const allowed=new Set(['P','DIV','BR','B','STRONG','I','EM','U','SPAN']);
+    function clean(node) {
+      if(node.nodeType===Node.TEXT_NODE) return document.createTextNode(node.nodeValue);
+      if(node.nodeType!==Node.ELEMENT_NODE) return document.createDocumentFragment();
+      const children=document.createDocumentFragment(); for(const child of [...node.childNodes]) children.appendChild(clean(child));
+      if(!allowed.has(node.tagName)) return children;
+      const el=document.createElement(node.tagName.toLowerCase());
+      const align=node.style.textAlign || node.getAttribute('align');
+      if(['left','center','right','justify'].includes(align)) el.style.textAlign=align;
+      const weight=node.style.fontWeight; if(weight==='bold' || Number(weight)>=600) el.style.fontWeight='bold';
+      if(node.style.fontStyle==='italic') el.style.fontStyle='italic';
+      if(node.style.textDecorationLine.includes('underline') || node.style.textDecoration.includes('underline')) el.style.textDecoration='underline';
+      el.appendChild(children); return el;
+    }
+    const out=document.createElement('div'); for(const child of [...container.childNodes]) out.appendChild(clean(child)); return out.innerHTML;
+  }
+  function layoutHtml(suffix, fallback) {
+    const key=`${layoutBaseKey()}:${suffix}`; const saved=state.layouts && state.layouts[key];
+    return typeof saved==='string' ? cleanLayout(saved) : defaultLayout(fallback);
+  }
+  function layoutBlock(suffix, fallback, classes='') {
+    const key=`${layoutBaseKey()}:${suffix}`;
+    return `<div class="layout-content ${classes}" data-layout-key="${esc(key)}" contenteditable="false" spellcheck="false">${layoutHtml(suffix,fallback)}</div>`;
+  }
+  function setLayoutEditing(on) {
+    layoutEditing=on;
+    const screen=document.querySelector('.recitation-screen'); if(!screen) return;
+    screen.classList.toggle('editing-layout',on);
+    screen.querySelectorAll('[data-layout-key]').forEach(el=>el.contentEditable=on?'true':'false');
+    const button=screen.querySelector('[data-action="edit-layout"]');
+    if(button) { button.textContent=on?'完成':'✎'; button.setAttribute('aria-label',on?'完成排版':'编辑排版'); }
+    if(!on) { document.activeElement?.blur(); showToast('排版已保存'); }
+  }
   function renderRecite() {
     const node=document.getElementById('view-recite');
     const shell=document.querySelector('.app-shell');
@@ -122,8 +166,8 @@
     const bookName=isHeart?'《心经》':'《道德经》';
     const countKey=isHeart?'xinCount':'daoCount';
     const todayCount=day()[countKey];
-    const content=isHeart ? `<div class="classic-text recitation-text">${HEART.map(segment=>esc(segment.text)).join('\n')}</div><details class="annotation-fold"><summary>白话翻译</summary><p>${esc(HEART_TRANSLATION)}</p></details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 章　⌄</button><h2>第${reciteChapter}章</h2><div class="classic-text recitation-text">${esc(c.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary><p>${esc(c.translation)}</p></details><details class="annotation-fold"><summary>本章导读</summary><p>${esc(c.note)}</p></details><div class="chapter-controls"><button data-action="swipe-prev" ${reciteChapter===1?'disabled':''}>← 上一章</button><button data-action="swipe-next" ${reciteChapter===81?'disabled':''}>下一章 →</button></div></div>`;})();
-    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px"><div class="recite-header"><button class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1>${bookName}</h1><div class="font-controls"><button data-action="font-smaller" aria-label="缩小字体">A−</button><button data-action="font-larger" aria-label="放大字体">A＋</button></div></div><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div>${content}${!isHeart ? `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="选择章节"><div class="chapter-dialog-head"><h2>选择章节</h2><button data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${window.DAO_DE_JING.chapters.map(ch=>`<button class="chapter-tile ${ch.number===reciteChapter?"selected":""}" data-action="choose-chapter" data-number="${ch.number}" aria-label="第${ch.number}章 ${esc(ch.title)}"><span class="chapter-page">${esc(ch.text.slice(0,75))}</span><span class="chapter-label">第 ${ch.number} 章</span></button>`).join("")}</div></dialog>` : ""}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span></div><div class="recite-tools"><button class="woodfish fish-minus" data-action="undo" data-key="${countKey}" aria-label="减少一遍" title="减少一遍"><img src="assets/woodfish-minus.svg?v=9" alt=""></button><button class="woodfish fish-plus" data-action="count" data-key="${countKey}" aria-label="增加一遍" title="增加一遍"><img src="assets/woodfish-plus.svg?v=9" alt=""></button></div></div></div>`;
+    const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 章　⌄</button><h2>第${reciteChapter}章</h2><div class="classic-text recitation-text">${layoutBlock("original",c.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation",c.translation,"translation-layout")}</details><details class="annotation-fold"><summary>本章导读</summary><p>${esc(c.note)}</p></details><div class="chapter-controls"><button data-action="swipe-prev" ${reciteChapter===1?'disabled':''}>← 上一章</button><button data-action="swipe-next" ${reciteChapter===81?'disabled':''}>下一章 →</button></div></div>`;})();
+    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px"><div class="recite-header"><button class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1>${bookName}</h1><div class="font-controls"><button data-action="font-smaller" aria-label="缩小字体">A−</button><button data-action="font-larger" aria-label="放大字体">A＋</button><button data-action="edit-layout" aria-label="编辑排版">✎</button></div></div><div class="layout-toolbar" role="toolbar" aria-label="排版工具"><button data-action="format" data-command="bold" aria-label="加粗"><b>B</b></button><button data-action="format" data-command="italic" aria-label="斜体"><i>I</i></button><button data-action="format" data-command="underline" aria-label="下划线"><u>U</u></button><button data-action="format" data-command="justifyLeft" aria-label="左对齐">☰</button><button data-action="format" data-command="justifyCenter" aria-label="居中">≡</button><button data-action="restore-layout" class="layout-restore">恢复默认</button></div><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div>${content}${!isHeart ? `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="选择章节"><div class="chapter-dialog-head"><h2>选择章节</h2><button data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${window.DAO_DE_JING.chapters.map(ch=>`<button class="chapter-tile ${ch.number===reciteChapter?"selected":""}" data-action="choose-chapter" data-number="${ch.number}" aria-label="第${ch.number}章 ${esc(ch.title)}"><span class="chapter-page">${esc(ch.text.slice(0,75))}</span><span class="chapter-label">第 ${ch.number} 章</span></button>`).join("")}</div></dialog>` : ""}<div class="recite-footer"><div class="recite-progress"><b id="recite-today-count">今日 ${todayCount} 遍</b><span>累计 ${sum(countKey)} 遍</span></div><div class="recite-tools"><button class="woodfish fish-minus" data-action="undo" data-key="${countKey}" aria-label="减少一遍" title="减少一遍"><img src="assets/woodfish-minus.svg?v=9" alt=""></button><button class="woodfish fish-plus" data-action="count" data-key="${countKey}" aria-label="增加一遍" title="增加一遍"><img src="assets/woodfish-plus.svg?v=9" alt=""></button></div></div></div>`;
   }
   let turningChapter = false;
   async function turnChapter(next) {
@@ -134,7 +178,7 @@
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (old && !reduced) await old.animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:`translateX(${-direction*24}px)`}],{duration:130,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{});
     if (reciteBook !== 'dao' || route !== 'recite') { turningChapter=false; return; }
-    reciteChapter = next; renderRecite(); window.scrollTo(0,0);
+    layoutEditing=false; reciteChapter = next; renderRecite(); window.scrollTo(0,0);
     const current=document.getElementById('dao-swipe');
     if (current && !reduced) await current.animate([{opacity:0,transform:`translateX(${direction*24}px)`},{opacity:1,transform:'translateX(0)'}],{duration:200,easing:'ease-out'}).finished.catch(()=>{});
     turningChapter=false;
@@ -173,6 +217,9 @@
     const button=event.target.closest('[data-action]'); if (!button) return;
     const action=button.dataset.action;
     if (action === 'open-recitation') { flushTimer(true); reciteBook=button.dataset.book; reciteChapter=1; route='recite'; startTimer(); document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-recite')); renderRecite(); window.scrollTo(0,0); }
+    if (action === 'edit-layout') { setLayoutEditing(!layoutEditing); return; }
+    if (action === 'format') { if(layoutEditing) document.execCommand(button.dataset.command, false, null); return; }
+    if (action === 'restore-layout') { if(confirm('恢复本篇原文和译文的默认排版？')) { const base=layoutBaseKey(); if(state.layouts){delete state.layouts[base+':original'];delete state.layouts[base+':translation'];} saveState(); layoutEditing=false; renderRecite(); showToast('已恢复默认排版'); } return; }
     if (action === 'back-recitation') { routeTo('today'); }
     if (action === 'open-chapters') { const dialog=document.getElementById('chapter-dialog'); dialog.showModal(); const selected=dialog.querySelector('.chapter-tile.selected'); if(selected) selected.scrollIntoView({block:'nearest'}); }
     if (action === 'close-chapters') document.getElementById('chapter-dialog').close();
@@ -204,9 +251,12 @@
     if (action === 'delete-activity') { const id=button.dataset.id; day().activities=day().activities.filter(item=>item.id!==id); saveState(); render(); }
   });
 
+  document.addEventListener('pointerdown',event=>{if(event.target.closest('.layout-toolbar [data-action="format"]')) event.preventDefault();});
+  document.addEventListener('input',event=>{const el=event.target.closest('[data-layout-key]'); if(!el || !layoutEditing) return; state.layouts ||= {}; state.layouts[el.dataset.layoutKey]=cleanLayout(el.innerHTML); saveState();});
+  document.addEventListener('paste',event=>{if(!layoutEditing || !event.target.closest('[data-layout-key]')) return; event.preventDefault(); document.execCommand('insertText',false,event.clipboardData.getData('text/plain'));});
   document.addEventListener('toggle',event=>{if(event.target.matches('.dao-translation')) localStorage.setItem('rikey.daoTranslationOpen',event.target.open?'1':'0');},true);
   let touchStart=null;
-  document.addEventListener('touchstart',e=>{if(e.target.closest('#dao-swipe')) touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+  document.addEventListener('touchstart',e=>{if(!layoutEditing && e.target.closest('#dao-swipe')) touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
   document.addEventListener('touchend',e=>{if(!touchStart||!e.target.closest('#dao-swipe'))return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){const next=reciteChapter+(dx<0?1:-1);if(next>=1&&next<=81)turnChapter(next);}},{passive:true});
   document.getElementById('open-settings').addEventListener('click',()=>{
     document.getElementById('settings-dialog').showModal();
