@@ -205,7 +205,7 @@
     for (let i=n-1;i>=0;i--) { const date=new Date(now); date.setDate(now.getDate()-i); items.push(localDate(date)); }
     return items;
   }
-  function renderStats() {
+  function renderStats(preserveInputs=false) {
     const book=statsBook, countKey=book==='heart'?'xinCount':'daoCount';
     const year=statsMonth.getFullYear(), month=statsMonth.getMonth();
     const monthPrefix=`${year}-${String(month+1).padStart(2,'0')}`;
@@ -219,14 +219,19 @@
     const selected=state.days[statsSelectedDate]||blankDay();
     const offset=(new Date(year,month,1).getDay()+6)%7, maxDay=new Date(year,month+1,0).getDate(), today=localDate();
     const blanks=Array.from({length:offset},()=>'<span class="calendar-blank"></span>').join('');
-    const calendar=Array.from({length:maxDay},(_,i)=>{const n=i+1,date=`${monthPrefix}-${String(n).padStart(2,'0')}`,item=state.days[date]||blankDay(),hasRecord=(Number(item[countKey])||0)>0||(Number(item.readingMs?.[book])||0)>0,isFuture=date>today;return `<button class="calendar-day ${date===statsSelectedDate?'selected':''} ${date===today?'today':''}" data-action="stats-day" data-date="${date}" aria-label="${date}${hasRecord?'，有记录':''}" ${isFuture?'disabled':''}><span>${n}</span>${hasRecord?'<i></i>':''}</button>`;}).join('');
+    const calendar=Array.from({length:maxDay},(_,i)=>{const n=i+1,date=`${monthPrefix}-${String(n).padStart(2,'0')}`,item=state.days[date]||blankDay(),hasRecord=(Number(item.daoCount)||0)>0||(Number(item.xinCount)||0)>0||(Number(item.readingMs?.dao)||0)>0||(Number(item.readingMs?.heart)||0)>0,isFuture=date>today;return `<button class="calendar-day ${date===statsSelectedDate?'selected':''} ${date===today?'today':''}" data-action="stats-day" data-date="${date}" aria-label="${date}${hasRecord?'，有记录':''}" ${isFuture?'disabled':''}><span>${n}</span>${hasRecord?'<i></i>':''}</button>`;}).join('');
     const isCurrentMonth=year===new Date().getFullYear() && month===new Date().getMonth();
     const cell=(label,obj)=>`<div class="report-cell"><span>${label}</span><b>${obj.count}<small> 遍</small></b><em>${formatDuration(obj.ms)}</em></div>`;
-    document.getElementById('view-stats').innerHTML=`<div class="report-header"><h1 id="stats-title">统计</h1></div>
+    const reportHtml=`<div class="report-header"><h1 id="stats-title">统计</h1></div>
       <div class="report-tabs" role="group" aria-label="选择经典"><button data-action="stats-book" data-book="heart" class="${book==='heart'?'active':''}" aria-pressed="${book==='heart'}">心经</button><button data-action="stats-book" data-book="dao" class="${book==='dao'?'active':''}" aria-pressed="${book==='dao'}">道德经</button></div>
       <section class="report-summary"><div class="report-section-title"><h2>修习概览</h2><span>累计 ${allStats.days} 天 · 连续 ${streak} 天</span></div><div class="report-cells">${cell('今日',todayStats)}${cell(isCurrentMonth?'本月':'当月',monthStats)}${cell('累计',allStats)}</div><div class="report-month-days">${year} 年 ${month+1} 月　·　修习 ${monthStats.days} 天</div></section>
-      <section class="report-calendar"><div class="calendar-heading"><h2>日历</h2><div class="calendar-month"><button data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="calendar-grid calendar-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid calendar-days">${blanks}${calendar}</div><div class="calendar-legend"><i></i> 有记录</div></section>
-      <section class="selected-record"><div class="selected-record-heading"><h2>${statsSelectedDate===today?'今天':statsSelectedDate}</h2><button class="record-edit-link" data-action="edit-record" data-date="${statsSelectedDate}">修改数据</button></div><div class="selected-record-row"><span>心经</span><b>${Number(selected.xinCount)||0} 遍</b><small>${formatDuration(selected.readingMs?.heart||0)}</small></div><div class="selected-record-row"><span>道德经</span><b>${Number(selected.daoCount)||0} 遍</b><small>${formatDuration(selected.readingMs?.dao||0)}</small></div></section>`;
+      <section class="report-calendar"><div class="calendar-heading"><h2>日历</h2><div class="calendar-month"><button data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="calendar-grid calendar-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid calendar-days">${blanks}${calendar}</div><div class="calendar-legend"><i></i> 有记录</div><div class="calendar-values"><div class="calendar-value-row"><span>心经</span><label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="heart" value="${Number(selected.xinCount)||0}" aria-label="心经次数"><small>遍</small></label><input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="heart" value="${recordTime(selected.readingMs?.heart||0)}" aria-label="心经时长，时分秒"></div><div class="calendar-value-row"><span>道德经</span><label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="dao" value="${Number(selected.daoCount)||0}" aria-label="道德经次数"><small>遍</small></label><input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="dao" value="${recordTime(selected.readingMs?.dao||0)}" aria-label="道德经时长，时分秒"></div></div></section>`;
+    const root=document.getElementById('view-stats');
+    if (!preserveInputs || !root.querySelector('.calendar-values')) { root.innerHTML=reportHtml; return; }
+    const fresh=document.createElement('div'); fresh.innerHTML=reportHtml;
+    root.querySelector('.report-summary').innerHTML=fresh.querySelector('.report-summary').innerHTML;
+    const oldDay=root.querySelector('.calendar-day.selected'), newDay=fresh.querySelector('.calendar-day.selected');
+    if(oldDay&&newDay) { oldDay.innerHTML=newDay.innerHTML; oldDay.setAttribute('aria-label',newDay.getAttribute('aria-label')); }
   }
   function render() {
     renderToday(); renderRead(); renderRecite(); renderStats();
@@ -236,32 +241,29 @@
     const seconds=Math.floor((Number(ms)||0)/1000);
     return `${String(Math.floor(seconds/3600)).padStart(2,'0')}:${String(Math.floor(seconds%3600/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
   }
-  function loadRecordFields(date) {
-    const entry=state.days[date] || blankDay();
-    for(const [book,key] of [['heart','xinCount'],['dao','daoCount']]) {
-      document.getElementById(`record-${book}-count`).value=Number(entry[key])||0;
-      const input=document.getElementById(`record-${book}-time`); const ms=Number(entry.readingMs?.[book])||0;
-      input.value=recordTime(ms); input.dataset.originalValue=input.value; input.dataset.originalMs=String(ms);
+  function updateInlineRecord(input,live) {
+    const book=input.dataset.book, kind=input.dataset.inlineRecord, key=book==='heart'?'xinCount':'daoCount';
+    const existing=state.days[statsSelectedDate] || blankDay();
+    if(!input.checkValidity()) {
+      if(!live) { input.value=kind==='count' ? String(Number(existing[key])||0) : recordTime(existing.readingMs?.[book]||0); showToast(kind==='count'?'请输入有效次数':'请按 时:分:秒 输入'); }
+      return;
     }
-  }
-  function openRecordEditor(date) {
-    const input=document.getElementById('record-date'); input.max=localDate(); input.value=date || localDate();
-    loadRecordFields(input.value); document.getElementById('record-dialog').showModal();
-  }
-  document.getElementById('record-date').addEventListener('change',event=>{if(event.target.validity.valid)loadRecordFields(event.target.value);});
-  document.getElementById('record-close').addEventListener('click',()=>document.getElementById('record-dialog').close());
-  document.getElementById('record-form').addEventListener('submit',event=>{
-    event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
-    const date=document.getElementById('record-date').value; if(!date || date>localDate())return;
-    const entry=day(date); if(!entry.readingMs)entry.readingMs={heart:0,dao:0};
-    for(const [book,key] of [['heart','xinCount'],['dao','daoCount']]) {
-      entry[key]=Number(document.getElementById(`record-${book}-count`).value);
-      const input=document.getElementById(`record-${book}-time`); const [h,m,s]=input.value.split(':').map(Number);
-      entry.readingMs[book]=input.value===input.dataset.originalValue ? Number(input.dataset.originalMs) : (h*3600+m*60+s)*1000;
+    if(kind==='count') {
+      const value=Number(input.value); if(!Number.isInteger(value) || value<0 || value>100000) { if(!live) input.value=String(Number(existing[key])||0); return; }
+      if(value===(Number(existing[key])||0)) return;
+      day(statsSelectedDate)[key]=value;
+    } else {
+      const current=Number(existing.readingMs?.[book])||0;
+      if(input.value===recordTime(current)) return;
+      const [h,m,s]=input.value.split(':').map(Number); const ms=(h*3600+m*60+s)*1000;
+      if(!Number.isSafeInteger(ms)) {if(!live){input.value=recordTime(current);showToast('请输入有效时长');}return;}
+      const entry=day(statsSelectedDate); entry.readingMs ||= {heart:0,dao:0}; entry.readingMs[book]=ms;
+      if(!live) input.value=recordTime(ms);
     }
-    statsSelectedDate=date; const [year,month]=date.split('-').map(Number); statsMonth=new Date(year,month-1,1);
-    saveState(); document.getElementById('record-dialog').close(); render(); showToast('记录已保存');
-  });
+    saveState(); renderToday(); renderStats(true);
+  }
+  document.addEventListener('input',event=>{const input=event.target.closest('[data-inline-record]');if(input)updateInlineRecord(input,true);});
+  document.addEventListener('change',event=>{const input=event.target.closest('[data-inline-record]');if(input)updateInlineRecord(input,false);});
   document.addEventListener('click', event => {
     const routeButton=event.target.closest('[data-route]');
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
@@ -273,7 +275,6 @@
       const delta=action==='stats-prev-month'?-1:1; statsMonth=new Date(statsMonth.getFullYear(),statsMonth.getMonth()+delta,1);
       const today=new Date(); statsSelectedDate=(statsMonth.getFullYear()===today.getFullYear()&&statsMonth.getMonth()===today.getMonth())?localDate():localDate(statsMonth); renderStats(); return;
     }
-    if (action === 'edit-record') { openRecordEditor(button.dataset.date || localDate()); return; }
     if (action === 'open-recitation') { flushTimer(true); reciteBook=button.dataset.book; reciteChapter=1; route='recite'; document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-recite')); renderRecite(); window.scrollTo(0,0); }
     if (action === 'start-timer') { startTimer(); const key=reciteBook==='heart'?'xinCount':'daoCount'; document.querySelector('.recite-footer').innerHTML=reciteFooter(key); updateTimerDisplay(); return; }
     if (action === 'edit-layout') { setLayoutEditing(!layoutEditing); return; }
