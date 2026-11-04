@@ -336,3 +336,5 @@ body { background:var(--paper); }
 .chapter-tile.selected .chapter-page { outline:2px solid #528a5c; outline-offset:1px; }
 .chapter-label { font-size:12px; text-align:center; }
 .chapter-tile:focus-visible { outline:2px solid #315a41; outline-offset:3px; }
+.reading-timer { color:var(--muted); font-size:11px; text-align:right; padding:0 2px 8px; font-variant-numeric:tabular-nums; }
+.reading-totals { color:var(--muted); font-size:12px; padding:10px 0 0; }
