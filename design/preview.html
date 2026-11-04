@@ -52,6 +52,25 @@
   .week{display:flex;gap:10px;margin-top:6px}
   .week span{flex:1;text-align:center;font-size:11px;color:var(--muted)}
   .verse{text-align:center;font-size:11px;color:var(--muted);line-height:20px;margin-top:18px}
+  /* v4.1 首页大卡片 */
+  .home{height:1010px}
+  .home .screen{padding-bottom:24px}
+  .section-label{display:flex;align-items:baseline;justify-content:space-between;margin:16px 2px 10px;font-size:14px;font-weight:500}
+  .section-label em{font-style:normal;font-size:11px;font-weight:400;color:var(--muted)}
+  .bigcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+  .bigcard-top{display:flex;align-items:center;gap:12px}
+  .bigseal{width:46px;height:46px;border-radius:14px;background:var(--green-soft);color:var(--green);font-size:20px;font-family:"Songti SC",serif;display:grid;place-items:center;flex:none}
+  .bigtitle{flex:1;min-width:0}
+  .bigtitle b{display:block;font-size:16px;font-weight:500;font-family:"Songti SC",serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bigtitle span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .bigcard-top .arrow{font-size:20px;color:var(--muted)}
+  .bigstats{display:flex;margin:12px 0 8px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .bigstats div{flex:1;text-align:center;border-right:1px solid var(--line)}
+  .bigstats div:last-child{border-right:0}
+  .bigstats b{display:block;font-size:21px;font-weight:500;font-variant-numeric:tabular-nums}
+  .bigstats span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+  .bigfoot{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+  .bigfoot em{font-style:normal;color:var(--cinnabar-ink)}
   .nav{position:absolute;left:0;right:0;bottom:0;height:64px;background:var(--card);border-top:1px solid var(--line);display:flex}
   .nav div{flex:1;text-align:center;font-size:11px;color:var(--muted);padding-top:12px}
   .nav div.on{color:var(--green);font-weight:500}
@@ -113,15 +132,15 @@
 <body>
 <div class="canvas">
   <div class="masthead">
-    <div><div class="eyebrow">Rikey / Design system v4</div><h1>日课 · 视觉规范 v4</h1></div>
-    <div class="meta">墨绿静气 · 朱砂点心<br>375 × 812 · 2026.11</div>
+    <div><div class="eyebrow">Rikey / Design system v4.1</div><h1>日课 · 视觉规范 v4.1</h1></div>
+    <div class="meta">墨绿静气 · 朱砂点心<br>大卡片 + 诵读计数面板<br>375 × 812 · 2026.11</div>
   </div>
 
   <div class="board">
     <!-- 01 首页 -->
     <div class="col">
-      <div class="col-label"><b>01</b> 首页 / 今日 · 重做主次</div>
-      <div class="phone">
+      <div class="col-label"><b>01</b> 首页 / 今日 · 大卡片主次</div>
+      <div class="phone home">
         <div class="screen">
           <div class="page-head"><div class="eyebrow">日课 · RIKEY</div><h2>十一月四日</h2><div class="date">星期三 · 宜诵读</div></div>
 
@@ -133,10 +152,16 @@
             <div class="cta">＋ 记一遍心经</div>
           </div>
 
-          <div class="card">
-            <h3>今日两课<em>累计 166 遍</em></h3>
-            <div class="row"><div class="mark">心</div><div class="info"><b>般若波罗蜜多心经</b><span>今日 5 遍 · 累计 166 遍 · 42 分</span></div><div class="arrow">›</div></div>
-            <div class="row"><div class="mark">道</div><div class="info"><b>道德经</b><span>今日 2 遍 · 累计 83 遍 · 18 分</span></div><div class="arrow">›</div></div>
+          <div class="section-label">今日两课<em>点按卡片进入背诵</em></div>
+          <div class="bigcard">
+            <div class="bigcard-top"><div class="bigseal">心</div><div class="bigtitle"><b>般若波罗蜜多心经</b><span>唐 · 玄奘译</span></div><div class="arrow">›</div></div>
+            <div class="bigstats"><div><b>5</b><span>今日遍数</span></div><div><b>166</b><span>累计遍数</span></div><div><b>30</b><span>修习天数</span></div></div>
+            <div class="bigfoot"><span>今日时长 42 分</span><em>进入背诵 →</em></div>
+          </div>
+          <div class="bigcard">
+            <div class="bigcard-top"><div class="bigseal">道</div><div class="bigtitle"><b>道德经</b><span>八十一章 · 王弼本</span></div><div class="arrow">›</div></div>
+            <div class="bigstats"><div><b>2</b><span>今日遍数</span></div><div><b>83</b><span>累计遍数</span></div><div><b>22</b><span>修习天数</span></div></div>
+            <div class="bigfoot"><span>今日时长 18 分</span><em>进入背诵 →</em></div>
           </div>
 
           <div class="card">
@@ -226,8 +251,14 @@
         <div class="comp"><div class="btn-main">＋ 记一遍心经</div><div class="btn-ghost">次按钮</div></div>
         <div class="comp"><div class="input">00:17:00</div><span style="font-size:11px;color:var(--muted)">输入框必有描边</span></div>
         <div class="comp" style="gap:4px"><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-0)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-1)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-2)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-3)"></i><span style="font-size:11px;color:var(--muted);margin-left:8px">热力四级</span></div>
+        <div class="comp" style="gap:8px">
+          <i style="width:34px;height:34px;border-radius:50%;background:var(--green-soft);border:1px solid var(--line)"></i>
+          <i style="width:46px;height:46px;border-radius:50%;background:var(--cinnabar-soft);border:1px dashed var(--cinnabar-line);display:grid;place-items:center;font-style:normal;font-size:16px;font-weight:500;color:var(--ink)">7</i>
+          <i style="width:34px;height:34px;border-radius:50%;background:var(--green);border:1px solid var(--line)"></i>
+          <span style="font-size:11px;color:var(--muted);margin-left:6px">诵读计数 · 双木鱼 + 朱砂圆章</span>
+        </div>
         <h4>Rules</h4>
-        <div style="font-size:12px;line-height:2;color:var(--ink-2)">每屏一个主角 · 全站一个强调色<br>数字与单位分层 · 时长不折行<br>无阴影 / 无渐变 / 无新色相<br>可编辑元素一眼可辨</div>
+        <div style="font-size:12px;line-height:2;color:var(--ink-2)">每屏一个主角 · 全站一个强调色<br>课程卡高 ≥ 140px，不用细行代替<br>数字与单位分层 · 时长不折行<br>无阴影 / 无渐变 / 无新色相<br>可编辑元素一眼可辨</div>
         <div class="foot">规范全文见仓库 DESIGN.md<br>基准视口 375 × 812 · 内容最大宽 660px</div>
       </div>
     </div>

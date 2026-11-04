@@ -587,3 +587,88 @@ button,input,summary { font-family:inherit; }
 @media (prefers-reduced-motion:reduce) {
   .hero-cta,.view,.woodfish { transition:none !important; animation:none !important; }
 }
+
+/* ===== v4.1 · 大卡片 + 诵读计数面板 ===== */
+.section-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin:18px 2px 10px; }
+.section-head h2 { font:500 15px/20px var(--font-classic); margin:0; }
+.section-head span { font-size:11px; color:var(--muted); }
+
+/* 首页两课 / 选择背诵：恢复大卡片 */
+.course-row.course-card { display:block; width:100%; min-height:0; padding:16px; margin:0 0 12px; border:1px solid var(--line); border-radius:16px; background:var(--card); text-align:left; color:var(--ink); cursor:pointer; transition:transform .14s ease-out,border-color .14s ease-out; }
+.course-row.course-card:first-of-type { border-top:1px solid var(--line); padding-top:16px; }
+.course-row.course-card:active { transform:scale(.99); border-color:var(--green); }
+.card-top { display:flex; align-items:center; gap:12px; }
+.course-seal { width:48px; height:48px; flex:none; border-radius:14px; background:var(--green-soft); color:var(--green); font:500 21px/1 var(--font-classic); display:grid; place-items:center; }
+.course-title { flex:1; min-width:0; }
+.course-title b { display:block; font:500 17px/22px var(--font-classic); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.course-title small { display:block; font-size:11px; color:var(--muted); margin-top:3px; }
+.course-arrow { font-size:22px; color:var(--muted); flex:none; }
+.course-stats { display:flex; margin:14px 0 10px; padding:12px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.course-stats > span { flex:1; min-width:0; text-align:center; border-right:1px solid var(--line); }
+.course-stats > span:last-child { border-right:0; }
+.course-stats b { display:block; font-size:23px; line-height:27px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
+.course-stats small { display:block; font-size:10px; color:var(--muted); margin-top:3px; }
+.course-foot { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted); }
+.course-foot span:last-child { color:var(--cinnabar-ink); }
+
+.recite-choices { border-top:0; display:grid; gap:12px; }
+.recite-choice { display:flex; align-items:center; gap:12px; width:100%; min-height:104px; padding:16px; border:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:16px; background:var(--card); text-align:left; cursor:pointer; transition:transform .14s ease-out,border-color .14s ease-out; }
+.recite-choice:active { transform:scale(.99); border-color:var(--green); }
+.recite-choice span { font:inherit; }
+.choice-seal { width:56px; height:56px; flex:none; border-radius:16px; background:var(--green-soft); color:var(--green); font:500 24px/1 var(--font-classic); display:grid; place-items:center; }
+.choice-body { flex:1; min-width:0; }
+.choice-body b { display:block; font:500 18px/24px var(--font-classic); color:var(--ink); }
+.choice-body small { display:block; font-size:11px; color:var(--muted); margin-top:4px; }
+.choice-meta { flex:none; text-align:right; }
+.choice-meta b { display:block; font-size:20px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
+.choice-meta small { display:block; font-size:10px; color:var(--muted); margin-top:2px; }
+.choice-arrow { font-size:20px; color:var(--muted); }
+.choice-note { text-align:center; font-size:11px; line-height:2; color:var(--muted); margin:26px 0 0; }
+
+/* 开始按钮 */
+.bottom-counter { flex-direction:column; gap:0; min-height:0; }
+.bottom-counter.waiting { padding:10px 0 12px; }
+.start-wrap { position:relative; width:88px; height:88px; display:grid; place-items:center; }
+.start-halo { position:absolute; inset:0; border-radius:50%; background:var(--cinnabar-soft); border:1px solid var(--cinnabar-line); animation:haloPulse 2.8s ease-in-out infinite; }
+.start-circle { position:relative; width:64px; height:64px; border:0; border-radius:50%; color:#fff; background:var(--cinnabar); font-size:15px; cursor:pointer; box-shadow:none; }
+.start-circle:active { transform:scale(.96); }
+.start-hint { font-size:11px; color:var(--muted); margin:10px 0 0; }
+@keyframes haloPulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.08); opacity:.62; } }
+
+/* 诵读计数面板 */
+.bottom-counter.running { align-items:stretch; padding:8px 0 4px; }
+.counter-head { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--muted); margin-bottom:2px; }
+.live-dot { width:6px; height:6px; flex:none; border-radius:50%; background:var(--cinnabar); box-shadow:0 0 0 3px var(--cinnabar-soft); }
+.counter-hint { margin-left:auto; }
+.counter-stage { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.woodfish { position:relative; width:92px; height:96px; flex:none; border:0; padding:0; background:transparent; display:grid; place-items:center; cursor:pointer; touch-action:manipulation; }
+.woodfish .fish-disc { position:absolute; inset:2px 2px 12px; width:auto; height:auto; border:0; border-radius:50%; background:var(--green-soft); opacity:.5; }
+.woodfish img { position:relative; width:92px; height:88px; display:block; pointer-events:none; }
+.woodfish .fish-sign { position:absolute; right:0; bottom:12px; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:var(--card); border:1px solid var(--line-strong); color:var(--green); font-size:17px; line-height:1; font-weight:400; pointer-events:none; }
+.fish-plus .fish-sign { background:var(--cinnabar); border-color:var(--cinnabar); color:#fff; }
+.woodfish .fish-tag { position:absolute; bottom:-2px; left:0; right:0; width:auto; height:auto; display:block; border:0; border-radius:0; background:transparent; text-align:center; font-size:10px; line-height:1.2; font-weight:400; color:var(--muted); pointer-events:none; }
+.woodfish .fish-pop { position:absolute; top:6px; right:auto; bottom:auto; left:50%; width:auto; height:auto; display:block; border:0; border-radius:0; background:transparent; transform:translateX(-50%); font-size:14px; font-weight:500; color:var(--cinnabar); opacity:0; pointer-events:none; }
+.fish-minus .fish-pop { color:var(--green); }
+.woodfish.is-tapped .fish-pop { animation:fishPop .46s ease-out; }
+.woodfish.is-tapped .fish-disc { animation:fishRipple .46s ease-out; }
+@keyframes fishPop { 0%{opacity:0;transform:translate(-50%,8px) scale(.8)} 35%{opacity:1} 100%{opacity:0;transform:translate(-50%,-16px) scale(1.1)} }
+@keyframes fishRipple { 0%{opacity:.6;transform:scale(.86)} 100%{opacity:.5;transform:scale(1.18)} }
+.count-seal { position:relative; width:92px; height:92px; flex:none; border-radius:50%; background:var(--cinnabar-soft); border:1px solid var(--cinnabar-line); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.seal-ring { position:absolute; inset:5px; border-radius:50%; border:1px dashed var(--cinnabar-line); }
+.count-seal small { font-size:10px; color:var(--cinnabar-ink); }
+.count-seal b { display:block; font-size:32px; line-height:36px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
+.count-seal b.bump { animation:countBump .3s ease-out; }
+.count-seal em { font-size:10px; font-style:normal; color:var(--muted); }
+@keyframes countBump { 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
+.recite-footer { padding:8px 16px calc(10px + env(safe-area-inset-bottom,0px)); }
+.app-shell.immersive { padding-bottom:170px; }
+
+@media (max-width:360px) {
+  .woodfish { width:80px; }
+  .woodfish img { width:80px; height:78px; }
+  .count-seal { width:84px; height:84px; }
+  .count-seal b { font-size:28px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .start-halo,.woodfish.is-tapped .fish-pop,.woodfish.is-tapped .fish-disc,.count-seal b.bump { animation:none !important; }
+}

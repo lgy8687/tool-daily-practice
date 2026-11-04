@@ -158,7 +158,12 @@
     const msToday = (Number(today.readingMs?.heart) || 0) + (Number(today.readingMs?.dao) || 0);
     const now = new Date(), weekNames = ['日', '一', '二', '三', '四', '五', '六'];
     const streak = calcStreak('all'), trend = trendBars('all', 7);
-    const course = (name, book, key, mark, count) => `<button class="course-row" data-action="open-recitation" data-book="${book}"><span class="course-mark">${mark}</span><span class="course-info"><b>${name}</b><small>今日 ${count} 遍 · 累计 ${sum(key)} 遍 · ${formatDurationShort(Number(today.readingMs?.[book]) || 0)}</small></span><span class="course-arrow">›</span></button>`;
+    const practicedDays = key => Object.values(state.days).filter(d => Number(d[key]) > 0).length;
+    const course = (name, book, key, mark, count, sub) => `<button class="course-row course-card" data-action="open-recitation" data-book="${book}">
+        <span class="card-top"><span class="course-seal">${mark}</span><span class="course-title"><b>${name}</b><small>${sub}</small></span><span class="course-arrow">›</span></span>
+        <span class="course-stats"><span><b>${count}</b><small>今日遍数</small></span><span><b>${sum(key)}</b><small>累计遍数</small></span><span><b>${practicedDays(key)}</b><small>修习天数</small></span></span>
+        <span class="course-foot"><span>今日时长 ${formatDurationShort(Number(today.readingMs?.[book]) || 0)}</span><span>进入背诵 →</span></span>
+      </button>`;
     document.getElementById('view-today').innerHTML = `<header class="page-head">
         <span class="eyebrow">日课 · RIKEY</span>
         <h1 id="today-title">${now.getMonth() + 1} 月 ${now.getDate()} 日</h1>
@@ -176,11 +181,9 @@
         <button class="hero-cta" data-action="count" data-key="xinCount">＋ 记一遍心经</button>
         <p class="hero-foot">历史最佳 ${calcBest('all')} 天 · 累计 ${sum('xinCount') + sum('daoCount')} 遍</p>
       </section>
-      <section class="ds-card">
-        <div class="card-head"><h2>今日两课</h2><span>点按进入背诵</span></div>
-        ${course('般若波罗蜜多心经', 'heart', 'xinCount', '心', heart)}
-        ${course('道德经', 'dao', 'daoCount', '道', dao)}
-      </section>
+      <div class="section-head"><h2>今日两课</h2><span>点按卡片进入背诵</span></div>
+      ${course('般若波罗蜜多心经', 'heart', 'xinCount', '心', heart, '唐 · 玄奘译')}
+      ${course('道德经', 'dao', 'daoCount', '道', dao, '八十一章 · 王弼本')}
       <section class="ds-card">
         <div class="card-head"><h2>近七日</h2><span>日均 ${trend.avg} 遍 · 共 ${trend.total} 遍</span></div>
         <div class="trend-bars">${trend.bars}</div>
@@ -244,15 +247,30 @@
     if(!on) { document.activeElement?.blur(); showToast('排版已保存'); }
   }
   function reciteFooter(countKey) {
-    if (!timerStart) return `<div class="bottom-counter waiting"><button class="start-circle" data-action="start-timer">开始</button></div>`;
-    return `<div class="bottom-counter running"><button class="woodfish fish-minus" data-action="undo" data-key="${countKey}" aria-label="减少一遍" title="减少一遍"><img src="assets/woodfish-minus.svg?v=9" alt=""></button><div class="center-count"><span>今日</span><b id="recite-today-count">${day()[countKey]}</b><small id="recite-total-count">累计 ${sum(countKey)}</small></div><button class="woodfish fish-plus" data-action="count" data-key="${countKey}" aria-label="增加一遍" title="增加一遍"><img src="assets/woodfish-plus.svg?v=9" alt=""></button></div>`;
+    if (!timerStart) return `<div class="bottom-counter waiting">
+        <div class="start-wrap"><span class="start-halo"></span><button class="start-circle" data-action="start-timer">开始</button></div>
+        <p class="start-hint">开始诵读 · 自动计时，点木鱼记一遍</p>
+      </div>`;
+    const fish = (cls, action, label, sign, pop, file, aria) => `<button class="woodfish ${cls}" data-action="${action}" data-key="${countKey}" aria-label="${aria}" title="${aria}">
+        <span class="fish-disc"></span><img src="assets/${file}?v=10" alt="">
+        <span class="fish-sign">${sign}</span><span class="fish-tag">${label}</span><span class="fish-pop">${pop}</span>
+      </button>`;
+    return `<div class="bottom-counter running">
+        <div class="counter-head"><i class="live-dot"></i><span>诵读中</span><span class="counter-hint">轻点木鱼记一遍</span></div>
+        <div class="counter-stage">
+          ${fish('fish-minus','undo','撤销','−','−1','woodfish-minus.svg','减少一遍')}
+          <div class="count-seal"><span class="seal-ring"></span><small>今日</small><b id="recite-today-count">${day()[countKey]}</b><em id="recite-total-count">累计 ${sum(countKey)}</em></div>
+          ${fish('fish-plus','count','记一遍','＋','＋1','woodfish-plus.svg','增加一遍')}
+        </div>
+      </div>`;
   }
   function renderRecite() {
     const node=document.getElementById('view-recite');
     const shell=document.querySelector('.app-shell');
     if (!reciteBook) {
       shell.classList.remove('immersive');
-      node.innerHTML=`<div class="page-intro"><h1 id="recite-title">选择背诵内容</h1></div><div class="recite-choices"><button class="recite-choice" data-action="open-recitation" data-book="dao"><span>《道德经》</span><small>累计 ${sum('daoCount')} 遍　→</small></button><button class="recite-choice" data-action="open-recitation" data-book="heart"><span>《心经》</span><small>累计 ${sum('xinCount')} 遍　→</small></button></div>`;
+      const choice = (book, name, seal, sub, key) => `<button class="recite-choice" data-action="open-recitation" data-book="${book}"><span class="choice-seal">${seal}</span><span class="choice-body"><b>${name}</b><small>${sub}</small></span><span class="choice-meta"><b>${sum(key)}</b><small>累计遍数</small></span><span class="choice-arrow">›</span></button>`;
+      node.innerHTML=`<div class="page-intro"><h1 id="recite-title">选择背诵内容</h1></div><div class="recite-choices">${choice('dao','《道德经》','道','八十一章 · 王弼本','daoCount')}${choice('heart','《心经》','心','唐 · 玄奘译','xinCount')}</div><p class="choice-note">诵读时自动计时 · 点木鱼记一遍<br>记录只保存在这台设备</p>`;
       return;
     }
     shell.classList.add('immersive');
@@ -280,7 +298,7 @@
   function updateReciteProgress(key) {
     const todayCount=document.getElementById('recite-today-count');
     const total=document.getElementById('recite-total-count');
-    if(todayCount) todayCount.textContent=String(day()[key]);
+    if(todayCount) { todayCount.textContent=String(day()[key]); todayCount.classList.remove('bump'); void todayCount.offsetWidth; todayCount.classList.add('bump'); }
     if(total) total.textContent=`累计 ${sum(key)}`;
   }
   function lastDays(n) {
@@ -380,6 +398,10 @@
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
     const button=event.target.closest('[data-action]'); if (!button) return;
     const action=button.dataset.action;
+    if (action === 'count' || action === 'undo') {
+      const fish=button.closest('.woodfish');
+      if (fish) { fish.classList.remove('is-tapped'); void fish.offsetWidth; fish.classList.add('is-tapped'); setTimeout(()=>fish.classList.remove('is-tapped'),700); }
+    }
     if (action === 'stats-book') { statsBook=button.dataset.book; renderStats(); return; }
     if (action === 'stats-day') { statsSelectedDate=button.dataset.date; renderStats(); return; }
     if (action === 'stats-prev-month' || action === 'stats-next-month') {
