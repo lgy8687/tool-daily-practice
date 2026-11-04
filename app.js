@@ -46,7 +46,7 @@
   if (!timerBook) timerStart=null;
   function formatDuration(ms) {
     const seconds=Math.floor(Math.max(0,ms)/1000), h=Math.floor(seconds/3600), m=Math.floor(seconds%3600/60), sec=seconds%60;
-    return h ? `${h}小时${String(m).padStart(2,'0')}分` : `${m}分${String(sec).padStart(2,'0')}秒`;
+    return h ? `${h}小时${String(m).padStart(2,'0')}分${String(sec).padStart(2,'0')}秒` : `${m}分${String(sec).padStart(2,'0')}秒`;
   }
   function startTimer() {
     if (!timerStart && route==='recite' && reciteBook) {
@@ -99,7 +99,7 @@
     return [dao ? `《道德经》${dao}章` : '', xin ? '《心经》' : ''].filter(Boolean).join(' · ');
   }
   function renderToday() {
-    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div></button></article>`;
+    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div></button><button class="practice-edit" data-action="edit-record" data-date="${localDate()}" aria-label="修改今日记录" title="修改今日记录">✎</button></article>`;
     document.getElementById('view-today').innerHTML=`${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
   }
   function daoReader() {
@@ -174,7 +174,7 @@
     const bookName=isHeart?'《心经》':'《道德经》';
     const countKey=isHeart?'xinCount':'daoCount';
     const todayCount=day()[countKey];
-    const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 章　⌄</button><h2>第${reciteChapter}章</h2><div class="classic-text recitation-text">${layoutBlock("original",c.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation",c.translation,"translation-layout")}</details><details class="annotation-fold"><summary>本章导读</summary><p>${esc(c.note)}</p></details><div class="chapter-controls"><button data-action="swipe-prev" ${reciteChapter===1?'disabled':''}>← 上一章</button><button data-action="swipe-next" ${reciteChapter===81?'disabled':''}>下一章 →</button></div></div>`;})();
+    const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 章　⌄</button><div class="classic-text recitation-text">${layoutBlock("original",c.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation",c.translation,"translation-layout")}</details><details class="annotation-fold"><summary>本章导读</summary><p>${esc(c.note)}</p></details></div>`;})();
     node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px"><div class="recite-header"><div class="recite-title-row"><button class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1>${bookName}</h1></div><div class="recite-meta-row"><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div><div class="font-controls"><button data-action="font-smaller" aria-label="缩小字体">A−</button><button data-action="font-larger" aria-label="放大字体">A＋</button><button data-action="edit-layout" aria-label="编辑排版">✎</button></div></div></div><div class="layout-toolbar" role="toolbar" aria-label="排版工具"><button data-action="format" data-command="bold" aria-label="加粗"><b>B</b></button><button data-action="format" data-command="italic" aria-label="斜体"><i>I</i></button><button data-action="format" data-command="underline" aria-label="下划线"><u>U</u></button><button data-action="format" data-command="justifyLeft" aria-label="左对齐">☰</button><button data-action="format" data-command="justifyCenter" aria-label="居中">≡</button><button data-action="restore-layout" class="layout-restore">恢复默认</button></div>${content}${!isHeart ? `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="选择章节"><div class="chapter-dialog-head"><h2>选择章节</h2><button data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${window.DAO_DE_JING.chapters.map(ch=>`<button class="chapter-tile ${ch.number===reciteChapter?"selected":""}" data-action="choose-chapter" data-number="${ch.number}" aria-label="第${ch.number}章 ${esc(ch.title)}"><span class="chapter-page">${esc(ch.text.slice(0,75))}</span><span class="chapter-label">第 ${ch.number} 章</span></button>`).join("")}</div></dialog>` : ""}<div class="recite-footer">${reciteFooter(countKey)}</div></div>`;
   }
   let turningChapter = false;
@@ -210,20 +210,52 @@
     const allReads=Object.values(state.days).reduce((total,item)=>total+(item.readings?.length||0),0);
     const totalDao=Object.values(state.days).reduce((total,item)=>total+(Number(item.readingMs?.dao)||0),0);
     const totalHeart=Object.values(state.days).reduce((total,item)=>total+(Number(item.readingMs?.heart)||0),0);
-    const history=dates.slice().reverse().map(date => { const item=state.days[date] || blankDay(); const sumRecite=item.daoCount+item.xinCount; const activities=item.activities.length; const mins=item.activities.reduce((total,a)=>total+(Number(a.minutes)||0),0); return `<div class="history-row"><b>${date === localDate() ? '今天' : date.slice(5).replace('-',' / ')}</b><span>诵 ${sumRecite} · 读 ${item.readings.length}</span><span>道德经 ${item.daoCount} 遍 · ${formatDuration(item.readingMs?.dao||0)}<br>心经 ${item.xinCount} 遍 · ${formatDuration(item.readingMs?.heart||0)}</span></div>`; }).join('');
+    const recordedDates=Object.keys(state.days).filter(date=>/^\d{4}-\d{2}-\d{2}$/.test(date)).filter(date=>{const d=state.days[date];return Number(d.daoCount)>0 || Number(d.xinCount)>0 || Number(d.readingMs?.dao)>0 || Number(d.readingMs?.heart)>0;});
+    const historyDates=[...new Set([localDate(),...recordedDates])].sort().reverse();
+    const history=historyDates.map(date=>{ const item=state.days[date] || blankDay(); return `<div class="history-row record-history-row"><b>${date===localDate()?'今天':date}</b><span>道德经 ${Number(item.daoCount)||0} 遍 · ${formatDuration(item.readingMs?.dao||0)}<br>心经 ${Number(item.xinCount)||0} 遍 · ${formatDuration(item.readingMs?.heart||0)}</span><button class="history-edit" data-action="edit-record" data-date="${date}" aria-label="修改 ${date} 的记录">✎</button></div>`; }).join('');
     document.getElementById('view-stats').innerHTML = `<div class="page-intro"><h1 id="stats-title">统计</h1></div><div class="stats-line"><span>道德经 <b>${sum('daoCount')}</b></span><span>心经 <b>${sum('xinCount')}</b></span></div><div class="reading-totals">道德经 ${formatDuration(totalDao)}　·　心经 ${formatDuration(totalHeart)}</div>
       <section class="simple-section"><div class="section-heading"><h2>近 7 日</h2><span class="aside">${activeDays} 天有记录 · 阅读 ${allReads} 项</span></div><div class="chart">${dates.map((date,index)=>`<div class="chart-day ${date===localDate()?'today':''}"><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4,values[index]/max*92)}px"></div></div><span>${date.slice(5).replace('-','/')}</span></div>`).join('')}</div></section>
-      <section class="simple-section"><div class="section-heading"><h2>每日记录</h2><span class="aside">最近 7 天</span></div><div class="history-list">${history}</div></section>`;
+      <section class="simple-section"><div class="section-heading"><h2>每日记录</h2><button class="text-button" data-action="edit-record">选择日期修改</button></div><div class="history-list">${history}</div></section>`;
   }
   function render() {
     renderToday(); renderRead(); renderRecite(); renderStats();
   }
 
+  function recordTime(ms) {
+    const seconds=Math.floor((Number(ms)||0)/1000);
+    return `${String(Math.floor(seconds/3600)).padStart(2,'0')}:${String(Math.floor(seconds%3600/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
+  }
+  function loadRecordFields(date) {
+    const entry=state.days[date] || blankDay();
+    for(const [book,key] of [['heart','xinCount'],['dao','daoCount']]) {
+      document.getElementById(`record-${book}-count`).value=Number(entry[key])||0;
+      const input=document.getElementById(`record-${book}-time`); const ms=Number(entry.readingMs?.[book])||0;
+      input.value=recordTime(ms); input.dataset.originalValue=input.value; input.dataset.originalMs=String(ms);
+    }
+  }
+  function openRecordEditor(date) {
+    const input=document.getElementById('record-date'); input.max=localDate(); input.value=date || localDate();
+    loadRecordFields(input.value); document.getElementById('record-dialog').showModal();
+  }
+  document.getElementById('record-date').addEventListener('change',event=>{if(event.target.validity.valid)loadRecordFields(event.target.value);});
+  document.getElementById('record-close').addEventListener('click',()=>document.getElementById('record-dialog').close());
+  document.getElementById('record-form').addEventListener('submit',event=>{
+    event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
+    const date=document.getElementById('record-date').value; if(!date || date>localDate())return;
+    const entry=day(date); if(!entry.readingMs)entry.readingMs={heart:0,dao:0};
+    for(const [book,key] of [['heart','xinCount'],['dao','daoCount']]) {
+      entry[key]=Number(document.getElementById(`record-${book}-count`).value);
+      const input=document.getElementById(`record-${book}-time`); const [h,m,s]=input.value.split(':').map(Number);
+      entry.readingMs[book]=input.value===input.dataset.originalValue ? Number(input.dataset.originalMs) : (h*3600+m*60+s)*1000;
+    }
+    saveState(); document.getElementById('record-dialog').close(); render(); showToast('记录已保存');
+  });
   document.addEventListener('click', event => {
     const routeButton=event.target.closest('[data-route]');
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
     const button=event.target.closest('[data-action]'); if (!button) return;
     const action=button.dataset.action;
+    if (action === 'edit-record') { openRecordEditor(button.dataset.date || localDate()); return; }
     if (action === 'open-recitation') { flushTimer(true); reciteBook=button.dataset.book; reciteChapter=1; route='recite'; document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-recite')); renderRecite(); window.scrollTo(0,0); }
     if (action === 'start-timer') { startTimer(); const key=reciteBook==='heart'?'xinCount':'daoCount'; document.querySelector('.recite-footer').innerHTML=reciteFooter(key); updateTimerDisplay(); return; }
     if (action === 'edit-layout') { setLayoutEditing(!layoutEditing); return; }

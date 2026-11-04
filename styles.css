@@ -372,3 +372,20 @@ body { background:var(--paper); }
 .center-count { min-width:62px; text-align:center; color:var(--muted); font-size:11px; line-height:1.2; }
 .center-count b { display:block; color:var(--ink); font-size:26px; font-weight:500; margin:2px 0; font-variant-numeric:tabular-nums; }
 .center-count small { font-size:10px; white-space:nowrap; }
+.practice-card { position:relative; }
+.practice-edit { position:absolute; right:10px; top:9px; width:40px; height:40px; border:0; border-radius:50%; color:#779483; background:transparent; font-size:17px; cursor:pointer; }
+.practice-edit:active { background:#e6f1e7; }
+.record-dialog { width:calc(100% - 32px); max-width:450px; max-height:85vh; padding:20px; border:0; border-radius:18px; background:#fbfdf9; color:var(--ink); box-shadow:0 16px 60px rgba(25,50,32,.2); }
+.record-dialog::backdrop { background:rgba(25,45,30,.42); }
+.record-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.record-heading h2 { margin:0; font-size:19px; }
+.record-heading button { border:0; background:transparent; font-size:26px; color:var(--muted); width:40px; height:40px; }
+.record-dialog label { display:flex; flex-direction:column; gap:6px; font-size:13px; color:#536b5a; }
+.record-dialog input { width:100%; min-width:0; box-sizing:border-box; border:1px solid #d4e4d6; border-radius:9px; padding:10px; background:#fff; color:var(--ink); font-size:16px; }
+.record-dialog fieldset { display:grid; grid-template-columns:1fr 1.3fr; gap:12px; border:0; border-top:1px solid var(--line); padding:14px 0 6px; margin:15px 0 0; }
+.record-dialog legend { color:#315a41; font-size:15px; padding:0 8px 0 0; }
+.record-dialog small { font-size:11px; color:var(--muted); }
+.record-save { width:100%; margin-top:16px; }
+.record-history-row { grid-template-columns:86px 1fr 40px; gap:8px; }
+.record-history-row span:last-of-type { grid-column:auto; line-height:1.7; }
+.history-edit { background:transparent; border:0; color:#62816a; font-size:17px; width:40px; height:40px; cursor:pointer; }
