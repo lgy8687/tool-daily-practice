@@ -1,0 +1,13 @@
+{
+  "name": "日课 · 读诵与日常",
+  "short_name": "日课",
+  "description": "读经典、记背诵、留下一日一页。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#f4f1e8",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

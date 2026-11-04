@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1e8">
+  <meta name="description" content="读《道德经》与《心经》，记录背诵、英语电影练习和每日工作。">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>日课 · 读诵与日常</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#today" aria-label="返回今日">
+        <span class="brand-mark">日</span>
+        <span><b>日课</b><small>读 · 诵 · 行</small></span>
+      </a>
+      <button class="icon-button" id="open-settings" aria-label="设置" title="设置">☼</button>
+    </header>
+
+    <main>
+      <section class="view active" id="view-today" aria-labelledby="today-title"></section>
+      <section class="view" id="view-read" aria-labelledby="read-title"></section>
+      <section class="view" id="view-recite" aria-labelledby="recite-title"></section>
+      <section class="view" id="view-stats" aria-labelledby="stats-title"></section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button class="nav-item active" data-route="today"><span>◷</span><small>今日</small></button>
+      <button class="nav-item" data-route="read"><span>▤</span><small>读经典</small></button>
+      <button class="nav-item" data-route="recite"><span>◎</span><small>背诵</small></button>
+      <button class="nav-item" data-route="stats"><span>▥</span><small>统计</small></button>
+    </nav>
+  </div>
+
+  <dialog id="settings-dialog" class="settings-dialog">
+    <form method="dialog" class="dialog-top"><div><span class="eyebrow">PREFERENCES</span><h2>设置</h2></div><button class="icon-button" aria-label="关闭">×</button></form>
+    <div class="setting-group">
+      <label for="movie-title">英语电影名称</label>
+      <input id="movie-title" maxlength="60" placeholder="例如：The Intern">
+      <label for="movie-target">目标遍数</label>
+      <input id="movie-target" type="number" min="1" max="9999" inputmode="numeric">
+      <button id="save-settings" class="button primary">保存设置</button>
+    </div>
+    <div class="setting-group">
+      <h3>数据备份</h3><p class="muted">记录只保存在这台设备的浏览器中。导出文件可用于备份或迁移。</p>
+      <div class="button-row"><button id="export-data" class="button secondary">导出记录</button><label class="button secondary file-button">导入备份<input id="import-data" type="file" accept="application/json"></label></div>
+    </div>
+    <p class="privacy-note">GitHub Pages 上的网页不接收你的打卡数据。</p>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="data/dao-de-jing.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
