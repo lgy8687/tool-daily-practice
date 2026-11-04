@@ -57,22 +57,9 @@
     const xin = current.readings.includes('heart');
     return [dao ? `《道德经》${dao}章` : '', xin ? '《心经》' : ''].filter(Boolean).join(' · ');
   }
-  function renderDaily() {
-    const current = day();
-    const minutes = current.activities.reduce((total, activity) => total + (Number(activity.minutes) || 0), 0);
-    const movieTarget = Number(state.settings.movieTarget) || 100;
-    const movieProgress = Math.min(100, Math.round(sum('movieViews') / movieTarget * 100));
-    const activityRows = current.activities.length ? current.activities.map(activity => `
-      <div class="activity-row"><span>${esc(activity.title)} <small>${esc(activity.time || '')}</small></span><span><small>${Number(activity.minutes) || 0} 分钟</small> <button class="delete-activity" data-action="delete-activity" data-id="${esc(activity.id)}" aria-label="删除记录">×</button></span></div>`).join('') : '<div class="empty-state">今天还没有记录</div>';
-    document.getElementById('view-daily').innerHTML = `
-      <div class="page-intro"><div class="date-line">${todayLabel()}</div><h1 id="today-title">今日</h1></div>
-      <div class="daily-summary"><span>背诵 <b>${current.daoCount + current.xinCount}</b> 遍</span><span>阅读 <b>${current.readings.length}</b> 项</span><span>工作 <b>${minutes}</b> 分钟</span></div>
-      <section class="simple-section"><div class="section-heading"><h2>英语电影</h2><span class="aside">${sum('movieViews')} / ${movieTarget} 遍</span></div><div class="movie-line"><div class="movie-head"><div><strong>${esc(state.settings.movieTitle || '英语电影')}</strong><small>100 遍计划</small></div><button class="button small secondary" data-action="movie">看完一遍 +1</button></div><div class="progress-track"><div class="progress-fill" style="width:${movieProgress}%"></div></div></div></section>
-      <section class="simple-section"><div class="section-heading"><h2>其他工作</h2><span class="aside">${current.activities.length} 项</span></div><div class="activity-form"><input id="activity-title" class="field" maxlength="60" placeholder="记一项工作" aria-label="工作内容"><input id="activity-minutes" class="field" type="number" min="0" max="1440" inputmode="numeric" placeholder="分钟" aria-label="用时分钟"><button class="button primary" data-action="add-activity">添加</button></div><div class="activity-list">${activityRows}</div></section>`;
-  }
   function renderToday() {
     const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div></button></article>`;
-    document.getElementById('view-today').innerHTML=`<div class="page-intro"><h1 id="today-title">日课</h1></div>${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
+    document.getElementById('view-today').innerHTML=`${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
   }
   function daoReader() {
     const chapter = window.DAO_DE_JING.chapters[chapterNumber - 1];
@@ -130,17 +117,17 @@
   }
   function renderStats() {
     const dates=lastDays(7);
-    const values=dates.map(date => { const item=state.days[date] || blankDay(); return item.daoCount+item.xinCount+item.movieViews+item.readings.length+item.activities.length; });
+    const values=dates.map(date => { const item=state.days[date] || blankDay(); return item.daoCount+item.xinCount; });
     const max=Math.max(...values,1);
-    const activeDays=Object.entries(state.days).filter(([,item]) => (item.daoCount+item.xinCount+item.movieViews+item.readings.length+item.activities.length)>0).length;
+    const activeDays=Object.entries(state.days).filter(([,item]) => (item.daoCount+item.xinCount)>0).length;
     const allReads=Object.values(state.days).reduce((total,item)=>total+(item.readings?.length||0),0);
-    const history=dates.slice().reverse().map(date => { const item=state.days[date] || blankDay(); const sumRecite=item.daoCount+item.xinCount; const activities=item.activities.length; const mins=item.activities.reduce((total,a)=>total+(Number(a.minutes)||0),0); return `<div class="history-row"><b>${date === localDate() ? '今天' : date.slice(5).replace('-',' / ')}</b><span>诵 ${sumRecite} · 读 ${item.readings.length}</span><span>电影 ${item.movieViews} · 工作 ${activities} 项 / ${mins} 分</span></div>`; }).join('');
-    document.getElementById('view-stats').innerHTML = `<div class="page-intro"><h1 id="stats-title">统计</h1></div><div class="stats-line"><span>道德经 <b>${sum('daoCount')}</b></span><span>心经 <b>${sum('xinCount')}</b></span><span>电影 <b>${sum('movieViews')}</b></span></div>
+    const history=dates.slice().reverse().map(date => { const item=state.days[date] || blankDay(); const sumRecite=item.daoCount+item.xinCount; const activities=item.activities.length; const mins=item.activities.reduce((total,a)=>total+(Number(a.minutes)||0),0); return `<div class="history-row"><b>${date === localDate() ? '今天' : date.slice(5).replace('-',' / ')}</b><span>诵 ${sumRecite} · 读 ${item.readings.length}</span><span>道德经 ${item.daoCount} · 心经 ${item.xinCount}</span></div>`; }).join('');
+    document.getElementById('view-stats').innerHTML = `<div class="page-intro"><h1 id="stats-title">统计</h1></div><div class="stats-line"><span>道德经 <b>${sum('daoCount')}</b></span><span>心经 <b>${sum('xinCount')}</b></span></div>
       <section class="simple-section"><div class="section-heading"><h2>近 7 日</h2><span class="aside">${activeDays} 天有记录 · 阅读 ${allReads} 项</span></div><div class="chart">${dates.map((date,index)=>`<div class="chart-day ${date===localDate()?'today':''}"><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4,values[index]/max*92)}px"></div></div><span>${date.slice(5).replace('-','/')}</span></div>`).join('')}</div></section>
       <section class="simple-section"><div class="section-heading"><h2>每日记录</h2><span class="aside">最近 7 天</span></div><div class="history-list">${history}</div></section>`;
   }
   function render() {
-    renderToday(); renderDaily(); renderRead(); renderRecite(); renderStats();
+    renderToday(); renderRead(); renderRecite(); renderStats();
   }
 
   document.addEventListener('click', event => {
@@ -182,13 +169,7 @@
   document.addEventListener('touchstart',e=>{if(e.target.closest('#dao-swipe')) touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
   document.addEventListener('touchend',e=>{if(!touchStart||!e.target.closest('#dao-swipe'))return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){const next=reciteChapter+(dx<0?1:-1);if(next>=1&&next<=81)turnChapter(next);}},{passive:true});
   document.getElementById('open-settings').addEventListener('click',()=>{
-    document.getElementById('movie-title').value=state.settings.movieTitle || '';
-    document.getElementById('movie-target').value=state.settings.movieTarget || 100;
     document.getElementById('settings-dialog').showModal();
-  });
-  document.getElementById('save-settings').addEventListener('click',event=>{
-    event.preventDefault(); const title=document.getElementById('movie-title').value.trim(); const target=Math.max(1,Number(document.getElementById('movie-target').value)||100);
-    state.settings.movieTitle=title || '英语电影'; state.settings.movieTarget=target; saveState(); document.getElementById('settings-dialog').close(); render(); showToast('设置已保存');
   });
   document.getElementById('export-data').addEventListener('click',()=>{
     const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`日课备份-${localDate()}.json`; link.click(); URL.revokeObjectURL(link.href); showToast('备份文件已导出');
@@ -202,5 +183,5 @@
   window.addEventListener('hashchange',()=>{const target=location.hash.slice(1);if(['today','daily','read','recite','stats','mine'].includes(target))routeTo(target);});
   const initial=location.hash.slice(1); if(['today','daily','read','recite','stats','mine'].includes(initial))route=initial;
   routeTo(route);
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { let refreshing=false; const hadController=!!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController&&!refreshing){refreshing=true;location.reload();}}); navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}); }
 })();
