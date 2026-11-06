@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日课 · 全新界面设计方案 v5 · 三稿比选</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;background:#E9ECE8;color:#1F2A25;padding:34px 30px 52px;-webkit-font-smoothing:antialiased}
+.canvas{width:1280px;margin:0 auto}
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.eyebrow{font-size:11px;letter-spacing:.18em;color:#7C8A80}
+.masthead h1{font-size:27px;font-weight:500;letter-spacing:-.02em;margin-top:8px}
+.masthead .lede{font-size:13px;color:#5B6B5F;margin-top:7px;line-height:1.6}
+.masthead .meta{font-size:12px;color:#7C8A80;text-align:right;line-height:1.9}
+.toolbar{display:flex;align-items:center;gap:10px;background:#FFFFFF;border:1px solid #DCE3DA;border-radius:10px;padding:10px 14px;margin-bottom:20px}
+.toolbar .lbl{font-size:12px;color:#7C8A80;margin-right:6px}
+.toolbar button{font:inherit;font-size:12px;padding:7px 14px;border-radius:999px;border:1px solid #DCE3DA;background:#FFFFFF;color:#4A5C51;cursor:pointer;min-height:32px}
+.toolbar button.on{background:#2F5D50;border-color:#2F5D50;color:#FFFFFF}
+.toolbar .hint{margin-left:auto;font-size:11px;color:#8C988E}
+.board{display:flex;gap:20px;align-items:flex-start}
+.col{flex:0 0 400px;width:400px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.col-label{width:375px;display:flex;align-items:center;gap:9px;font-size:13px;color:#3B4A40}
+.col-label b{font-size:11px;font-weight:500;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#2F5D50;color:#fff}
+.col[data-theme="b"] .col-label b{background:#3B6BE8}
+.col[data-theme="c"] .col-label b{background:#151515}
+.col-label span{font-size:11px;color:#8C988E;margin-left:auto}
+
+/* ============ 三套视觉语言 ============ */
+.col[data-theme="a"]{
+  --bg:#F5F2E9;--surface:#FFFCF5;--surface-2:#EFEADB;--line:#E3DCCC;--line-strong:#D3C9B2;
+  --ink:#24372F;--ink-2:#5B6B5F;--muted:#8C9284;--brand:#2F5D50;--accent:#C0533B;
+  --accent-soft:#F8EDE6;--accent-line:#EBD9CD;--radius:10px;--radius-lg:14px;--title-weight:500;
+  --font-title:"Songti SC","Noto Serif CJK SC","Source Han Serif SC",serif;
+  --hero-bg:#2F5D50;--hero-ink:#FFFCF5;--hero-muted:rgba(255,252,245,.66);--hero-num:#FFFCF5;
+  --cta-bg:#C0533B;--cta-ink:#FFFFFF;--cta-radius:10px;--seal-bg:#EFEADB;--seal-ink:#2F5D50;
+  --heat-0:#EDEADF;--heat-1:#C6D8C6;--heat-2:#83AC93;--heat-3:#2F5D50;--nav-h:54px;
+}
+.col[data-theme="b"]{
+  --bg:#F4F6FA;--surface:#FFFFFF;--surface-2:#F0F3F8;--line:#E5EAF2;--line-strong:#D5DDEA;
+  --ink:#17212E;--ink-2:#4C5869;--muted:#8B95A6;--brand:#3B6BE8;--accent:#3B6BE8;
+  --accent-soft:#EAF0FF;--accent-line:#D6E1FF;--radius:14px;--radius-lg:18px;--title-weight:600;
+  --font-title:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC",sans-serif;
+  --hero-bg:#FFFFFF;--hero-ink:#17212E;--hero-muted:#8B95A6;--hero-num:#3B6BE8;
+  --cta-bg:#3B6BE8;--cta-ink:#FFFFFF;--cta-radius:999px;--seal-bg:#EAF0FF;--seal-ink:#3B6BE8;
+  --heat-0:#EDF1F8;--heat-1:#CBD9F7;--heat-2:#8FAEF0;--heat-3:#3B6BE8;--nav-h:56px;
+}
+.col[data-theme="c"]{
+  --bg:#FBFBF9;--surface:#FFFFFF;--surface-2:#F3F3F1;--line:#E4E4E0;--line-strong:#D2D2CD;
+  --ink:#111111;--ink-2:#525252;--muted:#8A8A86;--brand:#151515;--accent:#C0533B;
+  --accent-soft:#F8EEE9;--accent-line:#EBDCD3;--radius:4px;--radius-lg:6px;--title-weight:600;
+  --font-title:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC",sans-serif;
+  --hero-bg:#151515;--hero-ink:#FFFFFF;--hero-muted:rgba(255,255,255,.58);--hero-num:#FFFFFF;
+  --cta-bg:#FFFFFF;--cta-ink:#111111;--cta-radius:4px;--seal-bg:#F0F0ED;--seal-ink:#111111;
+  --heat-0:#EEEEEC;--heat-1:#C9C9C5;--heat-2:#8A8A86;--heat-3:#151515;--nav-h:54px;
+}
+
+/* ============ 手机壳 ============ */
+.phone{width:375px;height:812px;background:var(--bg);border:1px solid #CFD7CE;border-radius:24px;overflow:hidden;position:relative;display:flex;flex-direction:column;color:var(--ink)}
+.screen{display:none;flex:1;min-height:0;flex-direction:column;padding:18px 20px 12px;overflow:hidden}
+.screen.on{display:flex}
+.scripture-font{font-family:"Songti SC","Noto Serif CJK SC",serif}
+
+/* 通用文字 */
+.status{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);letter-spacing:.04em;height:18px;flex:0 0 auto}
+.status .dot{width:6px;height:6px;border-radius:50%;background:var(--brand);display:inline-block;margin-left:6px}
+.page-title{font-family:var(--font-title);font-weight:var(--title-weight);font-size:25px;line-height:1.3;letter-spacing:-.01em;margin:12px 0 2px;flex:0 0 auto}
+.page-sub{font-size:11px;color:var(--muted);margin-bottom:14px;flex:0 0 auto}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 9px;flex:0 0 auto}
+.sec-head h3{font-size:14px;font-weight:500;letter-spacing:.01em}
+.sec-head span{font-size:11px;color:var(--muted)}
+
+/* 主卡 */
+.hero{background:var(--hero-bg);color:var(--hero-ink);border-radius:var(--radius-lg);padding:17px 18px 16px;flex:0 0 auto;border:1px solid var(--line)}
+.col[data-theme="a"] .hero,.col[data-theme="c"] .hero{border-color:transparent}
+.hero-label{font-size:11px;letter-spacing:.16em;color:var(--hero-muted)}
+.hero-main{display:flex;align-items:baseline;gap:6px;margin-top:8px}
+.hero-num{font-size:46px;line-height:1;font-weight:500;letter-spacing:-.04em;color:var(--hero-num);font-variant-numeric:tabular-nums}
+.hero-unit{font-size:13px;color:var(--hero-muted)}
+.streak-chip{margin-left:auto;font-size:11px;color:var(--hero-ink);background:rgba(128,128,128,.18);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.col[data-theme="b"] .streak-chip{background:var(--accent-soft);color:var(--accent)}
+.col[data-theme="c"] .streak-chip{background:transparent;border:1px solid rgba(255,255,255,.32);border-radius:2px}
+.hero-sub{font-size:12px;color:var(--hero-muted);margin-top:7px}
+.hero-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:15px;border:0;border-radius:var(--cta-radius);background:var(--cta-bg);color:var(--cta-ink);font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+.hero-cta:active{opacity:.86}
+
+/* 两课大卡 */
+.course{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:9px;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:96px}
+.course:active{background:var(--surface-2)}
+.course-seal{width:44px;height:44px;flex:0 0 44px;border-radius:var(--radius);background:var(--seal-bg);color:var(--seal-ink);display:grid;place-items:center;font-family:"Songti SC","Noto Serif CJK SC",serif;font-size:21px}
+.course-body{flex:1;min-width:0}
+.course-body b{display:block;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.course-nums{display:flex;gap:14px;margin-top:8px}
+.course-nums span{font-size:10px;color:var(--muted);white-space:nowrap}
+.course-nums b{display:block;font-size:17px;font-weight:500;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+.course-arrow{font-size:19px;color:var(--muted)}
+
+/* 趋势 */
+.trend{display:flex;align-items:flex-end;gap:7px;height:52px;padding:0 2px}
+.trend-bar{flex:1;border-radius:3px 3px 0 0;background:var(--heat-1);min-height:5px}
+.trend-bar.is-today{background:var(--accent)}
+.trend-week{display:flex;gap:7px;margin-top:5px}
+.trend-week span{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.trend-week span.is-today{color:var(--accent)}
+.verse{font-family:"Songti SC","Noto Serif CJK SC",serif;text-align:center;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-top:auto;padding-top:12px;flex:0 0 auto}
+
+/* 统计页 */
+.segment{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:3px;margin-bottom:13px;flex:0 0 auto}
+.segment button{flex:1;height:30px;border:0;border-radius:calc(var(--radius) - 2px);background:transparent;color:var(--ink-2);font:inherit;font-size:12px;cursor:pointer}
+.segment button.on{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.streak-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px;margin-bottom:11px;flex:0 0 auto}
+.streak-seal{width:66px;height:66px;flex:0 0 66px;border-radius:50%;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;align-content:center;line-height:1}
+.col[data-theme="c"] .streak-seal{border-radius:2px;border-style:solid}
+.streak-seal b{font-size:25px;font-weight:500;font-variant-numeric:tabular-nums}
+.streak-seal small{font-size:10px;margin-top:3px}
+.streak-copy h2{font-size:15px;font-weight:500;margin-bottom:4px}
+.streak-copy p{font-size:11px;color:var(--muted);line-height:1.6}
+.metrics{display:flex;gap:8px;margin-bottom:11px;flex:0 0 auto}
+.metric{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 11px;min-width:0}
+.metric span{display:block;font-size:10px;color:var(--muted)}
+.metric b{display:block;font-size:21px;font-weight:500;line-height:1.3;font-variant-numeric:tabular-nums;white-space:nowrap}
+.metric b small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px}
+.metric em{font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap}
+.metric.is-today b{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:13px 14px;margin-bottom:11px;flex:0 0 auto}
+.card h3{font-size:13px;font-weight:500;margin-bottom:10px}
+.heat{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.heat-cell{aspect-ratio:1/1;border:0;border-radius:2px;background:var(--heat-0);padding:0;cursor:pointer;min-width:0}
+.heat-cell.l1{background:var(--heat-1)}.heat-cell.l2{background:var(--heat-2)}.heat-cell.l3{background:var(--heat-3)}
+.heat-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
+.legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-top:9px}
+.legend i{width:9px;height:9px;border-radius:2px;display:block}
+.editor{margin-top:10px;border-top:1px solid var(--line);padding-top:9px;font-size:11px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center}
+.editor b{font-weight:500}
+.editor span{color:var(--muted)}
+.trend-card .trend{height:44px}
+.stats-screen .page-title{margin-top:8px}
+.stats-screen .page-sub{margin-bottom:10px}
+.stats-screen .segment{margin-bottom:9px}
+.stats-screen .streak-card{padding:11px;margin-bottom:8px}
+.stats-screen .streak-seal{width:58px;height:58px;flex-basis:58px}
+.stats-screen .streak-seal b{font-size:22px}
+.stats-screen .metrics{margin-bottom:8px}
+.stats-screen .metric{padding:8px 10px}
+.stats-screen .metric b{font-size:19px}
+.stats-screen .card{padding:11px 13px;margin-bottom:8px}
+.stats-screen .card h3{margin-bottom:8px}
+.stats-screen .heat{gap:2px}
+.stats-screen .legend{margin-top:7px}
+.stats-screen .editor{margin-top:7px;padding-top:7px}
+
+/* 读经页 */
+.read-meta{font-size:11px;color:var(--muted);margin:2px 0 12px;flex:0 0 auto}
+.read-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 17px;flex:0 0 auto;display:flex;flex-direction:column}
+.read-panel h2{font-family:"Songti SC","Noto Serif CJK SC",serif;font-size:20px;font-weight:500;text-align:center;margin-bottom:16px}
+.read-text{font-family:"Songti SC","Noto Serif CJK SC",serif;font-size:16px;line-height:2.1;color:var(--ink);text-align:justify}
+.read-text ruby{margin:0 1px}
+.read-text rt{font-family:-apple-system,sans-serif;font-size:8px;color:var(--accent);font-weight:400}
+.guide-card{margin-top:11px}
+.guide-text{font-size:12px;line-height:1.9;color:var(--ink-2)}
+.guide-more{display:block;font-size:11px;color:var(--accent);margin-top:8px}
+.read-actions{display:flex;gap:8px;margin-top:14px;flex:0 0 auto}
+.read-actions button{height:40px;border-radius:var(--radius);font:inherit;font-size:12px;cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);flex:1}
+.read-actions button.primary{background:var(--brand);border-color:var(--brand);color:#fff;flex:2}
+.col[data-theme="b"] .read-actions button.primary{background:var(--accent);border-color:var(--accent)}
+
+/* 背诵页 */
+.recite-head{display:flex;align-items:center;justify-content:space-between;height:36px;flex:0 0 auto}
+.recite-head .back{font-size:22px;color:var(--ink-2);background:none;border:0;cursor:pointer;width:36px;text-align:left}
+.recite-head b{font-family:var(--font-title);font-size:15px;font-weight:var(--title-weight)}
+.recite-head .tool{font-size:11px;padding:5px 9px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.recite-head .tool.on{color:var(--accent);border-color:var(--accent)}
+.recite-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:8px 0 14px;flex:0 0 auto}
+.recite-text{flex:1;min-height:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:20px 17px;font-family:"Songti SC","Noto Serif CJK SC",serif;font-size:18px;line-height:2.3;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.recite-text p{width:100%;margin:0;text-align:justify}
+.recite-text rt{font-family:-apple-system,sans-serif;font-size:9px;color:var(--accent)}
+.recite-text.hide-py rt{display:none}
+.counter-head{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);height:24px;flex:0 0 auto}
+.counter-head .live{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block}
+.counter-head .tip{margin-left:auto;margin-right:6px}
+.counter-head button{font:inherit;font-size:11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink-2);padding:4px 10px;cursor:pointer}
+.count-tap{position:relative;width:100%;height:88px;margin-top:6px;border:1px solid var(--accent-line);border-radius:var(--radius-lg);background:var(--accent-soft);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font:inherit;flex:0 0 auto}
+.count-tap:active{transform:scale(.995)}
+.tap-number{font-size:36px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.tap-unit{font-size:12px;color:var(--ink-2)}
+.tap-total{position:absolute;bottom:9px;font-size:10px;color:var(--muted)}
+.tap-pop{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--accent);opacity:0}
+.count-tap.pop .tap-pop{animation:pop .6s ease-out}
+.count-tap.pop .tap-number{animation:bump .35s ease-out}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,6px)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}
+@keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.count-tap.pop .tap-pop,.count-tap.pop .tap-number{animation:none}}
+
+/* 我的页 */
+.mine-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px;margin-bottom:11px;flex:0 0 auto}
+.mine-card h3{font-size:13px;font-weight:500;margin-bottom:8px}
+.mine-row{display:flex;align-items:center;justify-content:space-between;min-height:44px;font-size:12px;color:var(--ink-2);border-top:1px solid var(--line)}
+.mine-row:first-of-type{border-top:0}
+.mine-row .sw{width:38px;height:21px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);position:relative}
+.mine-row .sw:after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--muted)}
+.mine-row.on .sw{background:var(--accent-soft);border-color:var(--accent)}
+.mine-row.on .sw:after{left:19px;background:var(--accent)}
+.mine-note{font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px}
+
+/* 底部导航 */
+.tabbar{height:var(--nav-h);flex:0 0 var(--nav-h);display:flex;align-items:stretch;background:var(--surface);border-top:1px solid var(--line)}
+.tabbar button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;min-width:0}
+.tabbar button svg{width:19px;height:19px}
+.tabbar button.on{color:var(--brand)}
+.col[data-theme="b"] .tabbar button.on{color:var(--accent)}
+.tabbar button.on:after{content:"";position:absolute;top:0;width:20px;height:2px;background:var(--brand);border-radius:0 0 2px 2px}
+.col[data-theme="b"] .tabbar button.on:after{background:var(--accent)}
+.col[data-theme="c"] .tabbar button.on:after{height:3px;background:var(--accent)}
+
+/* 每稿说明 */
+.style-note{width:375px;background:#FFFFFF;border:1px solid #DCE3DA;border-radius:10px;padding:12px 14px}
+.style-note h4{font-size:13px;font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.style-note h4 i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.style-note p{font-size:11px;color:#5B6B5F;line-height:1.75}
+.style-note .kv{font-size:11px;color:#8C988E;margin-top:7px;padding-top:7px;border-top:1px solid #EDF0EA}
+
+/* 对比表与依据 */
+.panel{background:#FFFFFF;border:1px solid #DCE3DA;border-radius:12px;padding:18px 20px;margin-top:22px}
+.panel h2{font-size:15px;font-weight:500;margin-bottom:4px}
+.panel .sub{font-size:11px;color:#8C988E;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #EDF0EA;vertical-align:top;line-height:1.6}
+th{font-weight:500;color:#5B6B5F;background:#F6F8F4}
+td:first-child{width:110px;color:#5B6B5F;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;background:#EDF3EC;color:#2F5D50;margin-right:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.panel ul{list-style:none;font-size:12px;line-height:2;color:#4A5C51}
+.panel ul li:before{content:"—";color:#9AAA9C;margin-right:8px}
+.footnote{font-size:11px;color:#8C988E;margin-top:16px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">RIKEY / UI PROPOSAL V5 · 2026.11.06</div>
+      <h1>日课 · 全新界面设计方案</h1>
+      <p class="lede">三稿共用同一套信息架构，只比视觉语言。点上方切换视图，手机内可直接点按打卡、切页、选日期。</p>
+    </div>
+    <div class="meta">375 × 812 · 移动优先<br>单文件 · 内联样式 · 无外部资源<br>状态：风格比选稿，未改线上代码</div>
+  </header>
+
+  <div class="toolbar">
+    <span class="lbl">同步查看</span>
+    <button data-view-btn="today" class="on">今日</button>
+    <button data-view-btn="read">读经</button>
+    <button data-view-btn="stats">统计</button>
+    <button data-view-btn="recite">背诵</button>
+    <button data-view-btn="mine">我的</button>
+    <span class="hint">三稿同步切换 · 每稿计数独立 · 底部导航也可点</span>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <section class="panel">
+    <h2>三稿对照</h2>
+    <div class="sub">结构、文案、数据完全相同；差异只在色彩、字体、圆角与主卡处理。</div>
+    <table>
+      <tr><th>维度</th><th>A · 静气纸本</th><th>B · 清爽现代</th><th>C · 极简墨色</th></tr>
+      <tr><td>底色 / 面</td><td>米纸 #F5F2E9 / 暖白卡片</td><td>冷灰 #F4F6FA / 纯白卡片</td><td>中性白 #FBFBF9 / 纯白卡片</td></tr>
+      <tr><td>主色 / 强调</td><td>墨绿 #2F5D50 + 朱砂 #C0533B</td><td>靛蓝 #3B6BE8（主即强调）</td><td>近黑 #151515 + 一点朱砂</td></tr>
+      <tr><td>字体</td><td>宋体标题 + 系统无衬线正文</td><td>全站无衬线，字重 600</td><td>全站无衬线，字距收紧</td></tr>
+      <tr><td>圆角</td><td>10 / 14px，克制</td><td>14 / 18px，胶囊主按钮</td><td>4 / 6px，近乎直角</td></tr>
+      <tr><td>主卡处理</td><td>深墨绿实底 + 朱砂按钮</td><td>白底细描边 + 大号蓝数字</td><td>黑底白字 + 反白按钮</td></tr>
+      <tr><td>气质</td><td>安静、有仪式感、与诵读相合</td><td>效率、数据清晰、年轻</td><td>工具感、内容优先、克制</td></tr>
+      <tr><td>代价</td><td>信息密度偏低，趋势类数据不抢眼</td><td>与「静心读经」的情绪略有距离</td><td>偏冷，情感温度最低</td></tr>
+      <tr><td>参考语言</td><td>Apple 留白 / Claude 温暖人文</td><td>Linear 极简 / Mintlify 清爽</td><td>Vercel / Uber 黑白极简</td></tr>
+    </table>
+  </section>
+
+  <div class="grid2" style="margin-top:22px">
+    <section class="panel" style="margin-top:0">
+      <h2>符合用户习惯的依据</h2>
+      <div class="sub">不是装饰偏好，每条都能验收。</div>
+      <ul>
+        <li>核心任务常驻：<span class="tag">修复</span>现版「读经」没有底部入口，新增为第 2 个 tab</li>
+        <li>单屏一主角：首页只有「今日修习」是视觉焦点，其余降级</li>
+        <li>主操作落拇指热区：一键诵读在主卡下半部，全宽 ≥44px</li>
+        <li>不对称计数：点任意处 +1，撤销是轻量小按钮， destructive 操作不做等权</li>
+        <li>即时反馈：点按有 +1 浮字、数字弹跳、触觉（真机）</li>
+        <li>一致性与可撤销：热力格选日期即时高亮，编辑入口默认收起</li>
+        <li>可访问性：正文对比度 ≥4.5:1，点击目标 ≥44px，尊重减少动画</li>
+      </ul>
+    </section>
+    <section class="panel" style="margin-top:0">
+      <h2>方案包清单与下一步</h2>
+      <div class="sub">本轮已交付 1–3；选定风格后补齐 4–6。</div>
+      <ul>
+        <li>① 三稿风格比选（本文件 + PNG）</li>
+        <li>② 可点击原型：5 屏 / 三主题 / 打卡与选日期</li>
+        <li>③ 方案文档 <b>UI-PROPOSAL-v5.md</b>：架构、token、验收清单</li>
+        <li>④ 选定稿深化为完整 <b>DESIGN.md v5</b></li>
+        <li>⑤ 高保真设计稿 HTML + 2x PNG，可推 Pixso</li>
+        <li>⑥ 按规范改仓库代码、bump 版本、推 GitHub Pages</li>
+      </ul>
+      <p class="footnote">现版基线：v23（首页简单卡 + 统计热力 + 单一主点击区计数 + 道德经拼音）。本方案保留全部已验证交互，只重排信息架构与视觉语言，不推翻老用户肌肉记忆。</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  today:'<path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/>',
+  read:'<path d="M12 6.5C10 4.8 7.2 4.3 4 4.8v13c3.2-.5 6 0 8 1.7 2-1.7 4.8-2.2 8-1.7v-13c-3.2-.5-6 0-8 1.7z"/><path d="M12 6.5v13"/>',
+  stats:'<path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/>',
+  mine:'<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>'
+};
+const TABS=[['today','今日'],['read','读经'],['stats','统计'],['mine','我的']];
+const NOTES={
+  a:{name:'A · 静气纸本',color:'#2F5D50',desc:'沿用现有墨绿 + 朱砂品牌，宋体标题与米纸底强化诵读的安静感。老用户零适应成本。',kv:'推荐场景：日常长期使用 · 与「日课」气质最合'},
+  b:{name:'B · 清爽现代',color:'#3B6BE8',desc:'白底细描边 + 靛蓝单色系统，数字层级最强，统计与趋势最易读。',kv:'推荐场景：想让数据更抢眼 · 吸引新用户'},
+  c:{name:'C · 极简墨色',color:'#151515',desc:'黑白灰 + 一处朱砂点睛，最小圆角、最紧字距，内容优先的工具感。',kv:'推荐场景：极简偏好 · 长时间阅读经文'}
+};
+
+function tabbar(active){
+  return '<nav class="tabbar">'+TABS.map(([k,label])=>
+    '<button data-go="'+k+'" class="'+(k===active?'on':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[k]+'</svg><span>'+label+'</span></button>'
+  ).join('')+'</nav>';
+}
+function trend(height){
+  const vals=[3,5,2,6,4,7,5], wk=['六','日','一','二','三','四','五'];
+  return '<div class="trend">'+vals.map((v,i)=>'<i class="trend-bar'+(i===6?' is-today':'')+'" style="height:'+Math.round(v/7*(height||46))+'px"></i>').join('')+'</div>'+
+    '<div class="trend-week">'+wk.map((w,i)=>'<span class="'+(i===6?'is-today':'')+'">'+w+'</span>').join('')+'</div>';
+}
+function todayScreen(){
+  const course=(seal,name,t,cum,days)=>'<button class="course" data-go="recite"><span class="course-seal">'+seal+'</span><span class="course-body"><b>'+name+'</b><span class="course-nums"><span><b>'+t+'</b>今日遍</span><span><b>'+cum+'</b>累计遍</span><span><b>'+days+'</b>天数</span></span></span><span class="course-arrow">›</span></button>';
+  return '<div class="screen" data-view="today">'+
+    '<div class="status"><span>11 月 6 日 · 星期五</span><span>本地记录<i class="dot"></i></span></div>'+
+    '<h1 class="page-title">今日功课</h1><p class="page-sub">已坚持 12 天 · 今日读诵 42 分钟</p>'+
+    '<section class="hero"><div class="hero-label">今日修习</div><div class="hero-main"><b class="hero-num">7</b><span class="hero-unit">遍</span><span class="streak-chip">连续 12 天</span></div><div class="hero-sub">心经 5 遍 · 道德经 2 遍</div><button class="hero-cta" data-go="recite">继续诵读　→</button></section>'+
+    '<div class="sec-head"><h3>两课</h3><span>点按进入背诵</span></div>'+
+    course('心','般若波罗蜜多心经','5','166','48')+course('道','道德经','2','83','31')+
+    '<div class="sec-head"><h3>近 7 日</h3><span>共 31 遍</span></div>'+trend(40)+
+    '<p class="verse">致虚极，守静笃　—《道德经》十六章</p>'+
+  '</div>';
+}
+function statsScreen(){
+  let heat='';
+  for(let w=0;w<12;w++)for(let d=0;d<7;d++){
+    const lv=(w*7+d)%9===0?3:(w+d)%5===0?2:(w+d)%3===0?1:0;
+    heat+='<button class="heat-cell l'+lv+'" data-heat="1" aria-label="修习记录"></button>';
+  }
+  const metric=(l,n,u,t,acc)=>'<div class="metric'+(acc?' is-today':'')+'"><span>'+l+'</span><b>'+n+'<small>'+u+'</small></b><em>'+t+'</em></div>';
+  return '<div class="screen stats-screen" data-view="stats">'+
+    '<div class="status"><span>修习记录</span><span>仅存本机<i class="dot"></i></span></div>'+
+    '<h1 class="page-title">统计</h1><p class="page-sub">2026 年 11 月 · 累计修习 79 天</p>'+
+    '<div class="segment"><button class="on" data-seg="1">心经</button><button data-seg="1">道德经</button></div>'+
+    '<section class="streak-card"><div class="streak-seal"><b>12</b><small>连续日</small></div><div class="streak-copy"><h2>连续日课 12 天</h2><p>历史最长 21 天<br>本月已修习 6 天</p></div></section>'+
+    '<div class="metrics">'+metric('今日','7','遍','42 分',true)+metric('本月','86','遍','8 时 12 分')+metric('累计','249','遍','26 时 40 分')+'</div>'+
+    '<section class="card"><h3>修习热力</h3><div class="heat">'+heat+'</div><div class="legend"><span>少</span><i style="background:var(--heat-0)"></i><i style="background:var(--heat-1)"></i><i style="background:var(--heat-2)"></i><i style="background:var(--heat-3)"></i><span>多</span><span style="margin-left:auto">近 12 周</span></div><div class="editor"><b>修改本日记录</b><span>11 月 6 日 ›</span></div></section>'+
+    '<section class="card trend-card"><h3>近 7 日 <span style="font-weight:400;color:var(--muted);font-size:11px">共 31 遍</span></h3>'+trend(38)+'</section>'+
+  '</div>';
+}
+function readScreen(){
+  return '<div class="screen" data-view="read">'+
+    '<div class="status"><span>读经典</span><span>王弼本<i class="dot"></i></span></div>'+
+    '<h1 class="page-title">道德经</h1><p class="read-meta">第 一 章 · 唐以前旧本 · 拼音已开</p>'+
+    '<div class="segment"><button class="on" data-seg="1">《道德经》</button><button data-seg="1">《心经》</button></div>'+
+    '<section class="read-panel"><h2>第一章</h2><div class="read-text">道可道，非常道；名可名，非常名。无名天地之始，有名万物之母。故常无欲，以观其妙；常有欲，以观其<ruby>徼<rt>jiào</rt></ruby>。此两者同出而异名，同谓之玄。玄之又玄，众妙之门。</div></section>'+
+    '<section class="card guide-card"><h3>本章导读</h3><p class="guide-text">可以言说的「道」，便不是恒常不变之道；可以命名的「名」，也不是恒常之名。「无」与「有」同出于一源，只是称谓不同。</p><span class="guide-more">展开白话全文 ›</span></section>'+
+    '<div class="read-actions"><button data-py="1" class="py-toggle">拼音 · 开</button><button>上一章</button><button>下一章</button><button class="primary">标记读过</button></div>'+
+    '<p class="verse">注：生僻字与多音字按语境标注，排版编辑时自动剥离</p>'+
+  '</div>';
+}
+function reciteScreen(){
+  return '<div class="screen" data-view="recite">'+
+    '<div class="recite-head"><button class="back" data-go="today" aria-label="返回">‹</button><b>《道德经》</b><button class="tool on" data-py="1">拼</button></div>'+
+    '<div class="recite-meta"><span>第 1 章 · 玄之又玄</span><span>今日 12 分</span></div>'+
+    '<div class="recite-text"><p>道可道，非常道；名可名，非常名。无名天地之始，有名万物之母。故常无欲，以观其妙；常有欲，以观其<ruby>徼<rt>jiào</rt></ruby>。此两者同出而异名，同谓之玄。玄之又玄，众妙之门。</p></div>'+
+    '<div class="counter-head"><i class="live"></i><span>诵读中</span><span class="tip">轻点任意处记一遍</span><button data-undo="1">↶ 撤销</button></div>'+
+    '<button class="count-tap" data-count="1"><span class="tap-number">7</span><span class="tap-unit">遍</span><span class="tap-total">累计 166</span><span class="tap-pop">＋1</span></button>'+
+  '</div>';
+}
+function mineScreen(){
+  return '<div class="screen" data-view="mine">'+
+    '<div class="status"><span>我的</span><span>本地存储<i class="dot"></i></span></div>'+
+    '<h1 class="page-title">我的</h1><p class="page-sub">设置只作用于这台设备</p>'+
+    '<section class="mine-card"><h3>诵读偏好</h3><div class="mine-row on" data-mine-toggle="1"><span>道德经拼音标注</span><span class="sw"></span></div><div class="mine-row on" data-mine-toggle="1"><span>诵读计时</span><span class="sw"></span></div><div class="mine-row" data-mine-toggle="1"><span>点按震动反馈</span><span class="sw"></span></div></section>'+
+    '<section class="mine-card"><h3>经文字号</h3><div class="mine-row"><span>正文字号</span><span>18 px　−　＋</span></div><div class="mine-row"><span>排版编辑</span><span>已保存 3 处 ›</span></div></section>'+
+    '<section class="mine-card"><h3>数据备份</h3><p class="mine-note">记录只保存在这台设备的浏览器中，网页不会上传你的打卡数据。导出文件可用于备份或迁移。</p><div class="read-actions"><button>导出记录</button><button>导入备份</button></div></section>'+
+    '<p class="verse">日课 · 读诵与日常</p>'+
+  '</div>';
+}
+function phone(theme,view){
+  const n=NOTES[theme], letter=theme.toUpperCase();
+  const screens=todayScreen()+readScreen()+statsScreen()+reciteScreen()+mineScreen();
+  const nav=tabbar(view==='recite'?'today':view);
+  return '<article class="col" data-theme="'+theme+'" data-phone="'+theme+'">'+
+    '<div class="col-label"><b>'+letter+'</b>'+n.name+'<span>375 × 812</span></div>'+
+    '<div class="phone">'+screens+nav+'</div>'+
+    '<div class="style-note"><h4><i style="background:'+n.color+'"></i>'+n.name+'</h4><p>'+n.desc+'</p><div class="kv">'+n.kv+'</div></div>'+
+  '</article>';
+}
+
+const board=document.getElementById('board');
+board.innerHTML=['a','b','c'].map(t=>phone(t,'today')).join('');
+let activeView='today';
+function setView(v){
+  activeView=v;
+  document.querySelectorAll('[data-view-btn]').forEach(b=>b.classList.toggle('on',b.dataset.viewBtn===v));
+  document.querySelectorAll('.col').forEach(col=>{
+    col.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.dataset.view===v));
+    const nav=col.querySelector('.tabbar');
+    if(nav) nav.style.display=(v==='recite')?'none':'flex';
+    nav && nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
+  });
+}
+setView('today');
+
+document.addEventListener('click',e=>{
+  const vb=e.target.closest('[data-view-btn]');
+  if(vb){ setView(vb.dataset.viewBtn); return; }
+  const go=e.target.closest('[data-go]');
+  if(go){ setView(go.dataset.go); return; }
+  const seg=e.target.closest('[data-seg]');
+  if(seg){ seg.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('on')); seg.classList.add('on'); return; }
+  const heat=e.target.closest('[data-heat]');
+  if(heat){ heat.closest('.card').querySelectorAll('[data-heat]').forEach(b=>b.classList.remove('sel')); heat.classList.add('sel'); return; }
+  const count=e.target.closest('[data-count]');
+  if(count){
+    const num=count.querySelector('.tap-number');
+    num.textContent=String(Number(num.textContent)+1);
+    count.classList.remove('pop'); void count.offsetWidth; count.classList.add('pop');
+    return;
+  }
+  const undo=e.target.closest('[data-undo]');
+  if(undo){
+    const tap=undo.closest('.screen').querySelector('.tap-number');
+    tap.textContent=String(Math.max(0,Number(tap.textContent)-1));
+    return;
+  }
+  const py=e.target.closest('[data-py]');
+  if(py){
+    const screen=py.closest('.screen');
+    const on=py.classList.toggle('on');
+    const text=screen.querySelector('.recite-text');
+    if(text) text.classList.toggle('hide-py',!on);
+    if(py.classList.contains('py-toggle')) py.textContent='拼音 · '+(on?'开':'关');
+    else py.textContent=on?'拼':'拼';
+    return;
+  }
+  const mt=e.target.closest('[data-mine-toggle]');
+  if(mt){ mt.classList.toggle('on'); return; }
+});
+</script>
+</body>
+</html>
