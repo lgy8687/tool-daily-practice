@@ -71,10 +71,11 @@
   .bigstats span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
   .bigfoot{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
   .bigfoot em{font-style:normal;color:var(--cinnabar-ink)}
-  .nav{position:absolute;left:0;right:0;bottom:0;height:64px;background:var(--card);border-top:1px solid var(--line);display:flex}
-  .nav div{flex:1;text-align:center;font-size:11px;color:var(--muted);padding-top:12px}
-  .nav div.on{color:var(--green);font-weight:500}
-  .nav div b{display:block;font-size:17px;font-weight:400;line-height:20px}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:54px;background:var(--card);border-top:1px solid var(--line);display:flex}
+  .nav div{position:relative;flex:1;text-align:center;font-size:10px;color:var(--muted);padding-top:6px}
+  .nav div.on{color:var(--cinnabar);font-weight:500}
+  .nav svg{display:block;width:20px;height:20px;margin:0 auto 1px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .nav div.on::before{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:20px;height:2px;border-radius:2px;background:var(--cinnabar)}
   .segmented{display:flex;background:var(--paper-deep);border-radius:999px;padding:3px;margin-bottom:14px}
   .segmented span{flex:1;text-align:center;font-size:12px;padding:7px 0;color:var(--muted);border-radius:999px}
   .segmented span.on{background:var(--card);color:var(--green);font-weight:500}
@@ -132,7 +133,7 @@
 <body>
 <div class="canvas">
   <div class="masthead">
-    <div><div class="eyebrow">Rikey / Design system v4.1</div><h1>日课 · 视觉规范 v4.1</h1></div>
+    <div><div class="eyebrow">Rikey / Design system v4.2</div><h1>日课 · 视觉规范 v4.2</h1></div>
     <div class="meta">墨绿静气 · 朱砂点心<br>大卡片 + 诵读计数面板<br>375 × 812 · 2026.11</div>
   </div>
 
@@ -172,7 +173,7 @@
 
           <div class="verse">「 日日行，不怕千万里 」<br>今天也留一页给自己</div>
         </div>
-        <div class="nav"><div class="on"><b>⌂</b>首页</div><div><b>▥</b>统计</div><div><b>◉</b>我的</div></div>
+        <div class="nav"><div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg>首页</div><div><svg viewBox="0 0 24 24"><path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/></svg>统计</div><div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>我的</div></div>
       </div>
     </div>
 
@@ -219,7 +220,7 @@
           </div>
 
         </div>
-        <div class="nav"><div><b>⌂</b>首页</div><div class="on"><b>▥</b>统计</div><div><b>◉</b>我的</div></div>
+        <div class="nav"><div><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg>首页</div><div class="on"><svg viewBox="0 0 24 24"><path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/></svg>统计</div><div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>我的</div></div>
       </div>
     </div>
 
@@ -252,13 +253,12 @@
         <div class="comp"><div class="input">00:17:00</div><span style="font-size:11px;color:var(--muted)">输入框必有描边</span></div>
         <div class="comp" style="gap:4px"><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-0)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-1)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-2)"></i><i style="width:16px;height:16px;border-radius:3px;background:var(--heat-3)"></i><span style="font-size:11px;color:var(--muted);margin-left:8px">热力四级</span></div>
         <div class="comp" style="gap:8px">
-          <i style="width:34px;height:34px;border-radius:50%;background:var(--green-soft);border:1px solid var(--line)"></i>
-          <i style="width:46px;height:46px;border-radius:50%;background:var(--cinnabar-soft);border:1px dashed var(--cinnabar-line);display:grid;place-items:center;font-style:normal;font-size:16px;font-weight:500;color:var(--ink)">7</i>
-          <i style="width:34px;height:34px;border-radius:50%;background:var(--green);border:1px solid var(--line)"></i>
-          <span style="font-size:11px;color:var(--muted);margin-left:6px">诵读计数 · 双木鱼 + 朱砂圆章</span>
+          <i style="width:34px;height:26px;border-radius:999px;border:1px solid var(--line)"></i>
+          <i style="width:110px;height:46px;border-radius:14px;background:var(--cinnabar-soft);border:1px solid var(--cinnabar-line);display:grid;place-items:center;font-style:normal;font-size:20px;font-weight:500;color:var(--ink)">7</i>
+          <span style="font-size:11px;color:var(--muted);margin-left:6px">诵读计数 · 单一主操作 + 轻量撤销</span>
         </div>
         <h4>Rules</h4>
-        <div style="font-size:12px;line-height:2;color:var(--ink-2)">每屏一个主角 · 全站一个强调色<br>课程卡高 ≥ 140px，不用细行代替<br>数字与单位分层 · 时长不折行<br>无阴影 / 无渐变 / 无新色相<br>可编辑元素一眼可辨</div>
+        <div style="font-size:12px;line-height:2;color:var(--ink-2)">每屏一个主角 · 全站一个强调色<br>课程卡高 ≥ 140px，不用细行代替<br>计数只留一个主操作，撤销不等权<br>导航 54px · 线性图标 · 无大背景<br>数字与单位分层 · 时长不折行<br>无阴影 / 无渐变 / 无新色相<br>可编辑元素一眼可辨</div>
         <div class="foot">规范全文见仓库 DESIGN.md<br>基准视口 375 × 812 · 内容最大宽 660px</div>
       </div>
     </div>

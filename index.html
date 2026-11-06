@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>日课 · 读诵与日常</title>
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
   <div class="app-shell">
@@ -30,9 +30,9 @@
     </main>
 
     <nav class="bottom-nav" aria-label="主导航">
-      <button class="nav-item active" data-route="today"><span>⌂</span><small>首页</small></button>
-      <button class="nav-item" data-route="stats"><span>▥</span><small>统计</small></button>
-      <button class="nav-item" data-route="mine"><span>◉</span><small>我的</small></button>
+      <button class="nav-item active" data-route="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg><small>首页</small></button>
+      <button class="nav-item" data-route="stats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/></svg><small>统计</small></button>
+      <button class="nav-item" data-route="mine"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><small>我的</small></button>
     </nav>
   </div>
 
@@ -46,7 +46,8 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="data/dao-de-jing.js?v=20"></script>
-  <script src="app.js?v=20"></script>
+  <script src="data/dao-de-jing.js?v=21"></script>
+  <script src="data/dao-pinyin.js?v=21"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>
