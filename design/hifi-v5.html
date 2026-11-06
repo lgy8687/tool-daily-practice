@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日课 · 界面设计定稿 v5 · A 静气纸本</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F2E9;--surface:#FFFCF5;--surface-2:#EFEADB;--line:#E3DCCC;--line-strong:#D3C9B2;
+  --ink:#24372F;--ink-2:#5B6B5F;--muted:#8C9284;--brand:#2F5D50;--accent:#C0533B;
+  --accent-ink:#993C1D;--accent-soft:#F8EDE6;--accent-line:#EBD9CD;
+  --radius:10px;--radius-lg:14px;--title-weight:500;--nav-h:54px;
+  --font-title:"Songti SC","Noto Serif CJK SC","Source Han Serif SC",serif;
+  --heat-0:#EDEADF;--heat-1:#C6D8C6;--heat-2:#83AC93;--heat-3:#2F5D50;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;background:#E9ECE8;color:#1F2A25;padding:34px 30px 52px;-webkit-font-smoothing:antialiased}
+.canvas{width:1650px;margin:0 auto}
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.eyebrow{font-size:11px;letter-spacing:.18em;color:#7C8A80}
+.masthead h1{font-family:var(--font-title);font-size:28px;font-weight:500;letter-spacing:-.01em;margin-top:8px}
+.masthead .lede{font-size:13px;color:#5B6B5F;margin-top:7px;line-height:1.6}
+.masthead .meta{font-size:12px;color:#7C8A80;text-align:right;line-height:1.9}
+.board{display:flex;gap:20px;align-items:flex-start}
+.col{flex:0 0 375px;width:375px}
+.col-label{display:flex;align-items:center;gap:9px;font-size:13px;color:#3B4A40;margin-bottom:10px}
+.col-label b{font-size:11px;font-weight:500;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#2F5D50;color:#fff}
+.col-label span{font-size:11px;color:#8C988E;margin-left:auto}
+
+.phone{width:375px;height:812px;background:var(--bg);border:1px solid #CFD7CE;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;color:var(--ink)}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;padding:18px 20px 12px;overflow:hidden}
+
+.status{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);letter-spacing:.04em;height:18px;flex:0 0 auto}
+.status .dot{width:6px;height:6px;border-radius:50%;background:var(--brand);display:inline-block;margin-left:6px}
+.page-title{font-family:var(--font-title);font-weight:var(--title-weight);font-size:25px;line-height:1.3;letter-spacing:-.01em;margin:12px 0 2px;flex:0 0 auto}
+.page-sub{font-size:11px;color:var(--muted);margin-bottom:14px;flex:0 0 auto}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 9px;flex:0 0 auto}
+.sec-head h3{font-size:14px;font-weight:500;letter-spacing:.01em}
+.sec-head span{font-size:11px;color:var(--muted)}
+
+/* 主卡 */
+.hero{background:var(--brand);color:var(--surface);border-radius:var(--radius-lg);padding:17px 18px 16px;flex:0 0 auto}
+.hero-label{font-size:11px;letter-spacing:.16em;color:rgba(255,252,245,.66)}
+.hero-main{display:flex;align-items:baseline;gap:6px;margin-top:8px}
+.hero-num{font-size:46px;line-height:1;font-weight:500;letter-spacing:-.04em;color:var(--surface);font-variant-numeric:tabular-nums}
+.hero-unit{font-size:13px;color:rgba(255,252,245,.66)}
+.streak-chip{margin-left:auto;font-size:11px;color:var(--surface);background:rgba(255,252,245,.16);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.hero-sub{font-size:12px;color:rgba(255,252,245,.7);margin-top:7px}
+.hero-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:15px;border:0;border-radius:var(--radius);background:var(--accent);color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+
+/* 两课大卡（定稿 ≥112px） */
+.course{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:9px;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:112px}
+.course-seal{width:44px;height:44px;flex:0 0 44px;border-radius:var(--radius);background:var(--surface-2);color:var(--brand);display:grid;place-items:center;font-family:var(--font-title);font-size:21px}
+.course-body{flex:1;min-width:0}
+.course-body b{display:block;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.course-nums{display:flex;gap:14px;margin-top:8px}
+.course-nums span{font-size:10px;color:var(--muted);white-space:nowrap}
+.course-nums b{display:block;font-size:17px;font-weight:500;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+.course-time{display:block;font-size:10px;color:var(--muted);margin-top:8px}
+.course-arrow{font-size:19px;color:var(--muted)}
+
+/* 趋势 */
+.trend{display:flex;align-items:flex-end;gap:7px;height:40px;padding:0 2px}
+.trend-bar{flex:1;border-radius:3px 3px 0 0;background:var(--heat-1);min-height:5px}
+.trend-bar.is-today{background:var(--accent)}
+.trend-week{display:flex;gap:7px;margin-top:5px}
+.trend-week span{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.trend-week span.is-today{color:var(--accent)}
+.verse{font-family:var(--font-title);text-align:center;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-top:auto;padding-top:12px;flex:0 0 auto}
+
+/* 底部导航 */
+.tabbar{height:var(--nav-h);flex:0 0 var(--nav-h);display:flex;align-items:stretch;background:var(--surface);border-top:1px solid var(--line)}
+.tabbar button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;min-width:0}
+.tabbar button svg{width:19px;height:19px}
+.tabbar button.on{color:var(--accent)}
+.tabbar button.on:after{content:"";position:absolute;top:0;width:20px;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+
+/* 读经页 */
+.segment{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:3px;margin-bottom:11px;flex:0 0 auto}
+.segment button{flex:1;height:30px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);font:inherit;font-size:12px;cursor:pointer}
+.segment button.on{background:var(--surface);color:var(--ink);font-weight:500}
+.read-tools{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;flex:0 0 auto}
+.read-tools .meta{font-size:11px;color:var(--muted)}
+.read-tools .py{font-size:11px;padding:5px 11px;border:1px solid var(--accent);border-radius:999px;background:var(--accent-soft);color:var(--accent-ink)}
+.read-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 17px;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.read-panel h2{font-family:var(--font-title);font-size:20px;font-weight:500;text-align:center;margin-bottom:14px}
+.read-text{font-family:var(--font-title);font-size:16px;line-height:2.1;color:var(--ink);text-align:left}
+.read-text rt{font-family:-apple-system,sans-serif;font-size:8px;color:var(--accent);font-weight:400}
+ruby{ruby-align:center;ruby-position:over;-webkit-ruby-position:before}
+.guide{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-top:11px;flex:0 0 auto}
+.guide b{font-size:12px;font-weight:500}
+.guide p{font-size:11px;line-height:1.8;color:var(--ink-2);margin-top:6px}
+.read-actions{display:flex;gap:8px;margin-top:14px;flex:0 0 auto}
+.read-actions button{height:40px;border-radius:var(--radius);font:inherit;font-size:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);flex:1}
+.read-actions button.primary{background:var(--brand);border-color:var(--brand);color:#fff;flex:2}
+
+/* 统计页 */
+.streak-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:11px;margin-bottom:8px;flex:0 0 auto}
+.streak-seal{width:58px;height:58px;flex:0 0 58px;border-radius:50%;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;align-content:center;line-height:1}
+.streak-seal b{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.streak-seal small{font-size:10px;margin-top:3px}
+.streak-copy h2{font-size:15px;font-weight:500;margin-bottom:4px}
+.streak-copy p{font-size:11px;color:var(--muted);line-height:1.6}
+.metrics{display:flex;gap:8px;margin-bottom:8px;flex:0 0 auto}
+.metric{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;min-width:0}
+.metric span{display:block;font-size:10px;color:var(--muted)}
+.metric b{display:block;font-size:19px;font-weight:500;line-height:1.3;font-variant-numeric:tabular-nums;white-space:nowrap}
+.metric b small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px}
+.metric em{font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap}
+.metric.is-today b{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:11px 13px;margin-bottom:8px;flex:0 0 auto}
+.card h3{font-size:13px;font-weight:500;margin-bottom:8px}
+.heat{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+.heat-cell{aspect-ratio:1/1;border:0;border-radius:2px;background:var(--heat-0);min-width:0}
+.heat-cell.l1{background:var(--heat-1)}.heat-cell.l2{background:var(--heat-2)}.heat-cell.l3{background:var(--heat-3)}
+.heat-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
+.legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-top:7px}
+.legend i{width:9px;height:9px;border-radius:2px;display:block}
+.editor{margin-top:7px;border-top:1px solid var(--line);padding-top:7px;font-size:11px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center}
+.editor span{color:var(--muted)}
+.stats-screen .page-title{margin-top:8px}
+.stats-screen .page-sub{margin-bottom:10px}
+
+/* 背诵页（沉浸态，导航隐藏） */
+.recite-head{display:flex;align-items:center;justify-content:space-between;height:36px;flex:0 0 auto}
+.recite-head .back{font-size:22px;color:var(--ink-2);background:none;border:0;width:36px;text-align:left}
+.recite-head b{font-family:var(--font-title);font-size:15px;font-weight:500}
+.recite-head .tool{font-size:11px;padding:5px 9px;border:1px solid var(--accent);border-radius:var(--radius);background:var(--accent-soft);color:var(--accent-ink)}
+.recite-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:8px 0 14px;flex:0 0 auto}
+.recite-text{flex:1;min-height:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:20px 17px;font-family:var(--font-title);font-size:18px;line-height:2.3;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.recite-text p{width:100%;margin:0;text-align:left}
+.recite-text rt{font-family:-apple-system,sans-serif;font-size:9px;color:var(--accent)}
+.counter-head{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);height:24px;margin-top:10px;flex:0 0 auto}
+.counter-head .live{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block}
+.counter-head .tip{margin-left:auto;margin-right:6px}
+.counter-head button{font:inherit;font-size:11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink-2);padding:4px 10px}
+.count-tap{position:relative;width:100%;height:88px;margin-top:6px;border:1px solid var(--accent-line);border-radius:var(--radius-lg);background:var(--accent-soft);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto}
+.tap-number{font-size:36px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.tap-unit{font-size:12px;color:var(--ink-2)}
+.tap-total{position:absolute;bottom:9px;font-size:10px;color:var(--muted)}
+.immersive-note{height:var(--nav-h);flex:0 0 var(--nav-h);display:grid;place-items:center;font-size:10px;color:var(--muted);border-top:1px dashed var(--line-strong);background:var(--surface-2)}
+
+/* 每稿脚注 */
+.style-note{margin-top:10px;background:#FFFFFF;border:1px solid #DCE3DA;border-radius:10px;padding:11px 13px}
+.style-note h4{font-size:13px;font-weight:500;margin-bottom:5px}
+.style-note p{font-size:11px;color:#5B6B5F;line-height:1.75}
+
+/* 规范板 */
+.panel{background:#FFFFFF;border:1px solid #DCE3DA;border-radius:12px;padding:18px 20px;margin-top:22px}
+.panel h2{font-family:var(--font-title);font-size:16px;font-weight:500;margin-bottom:4px}
+.panel .sub{font-size:11px;color:#8C988E;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:26px}
+.panel h4{font-size:12px;font-weight:500;color:#5B6B5F;margin-bottom:10px;letter-spacing:.04em}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:74px}
+.sw i{display:block;height:44px;border-radius:7px;border:1px solid rgba(0,0,0,.06)}
+.sw b{display:block;font-size:11px;font-weight:500;margin-top:6px}
+.sw span{display:block;font-size:10px;color:#8C988E;margin-top:2px;font-variant-numeric:tabular-nums}
+.typespec{font-size:12px;line-height:2.1;color:#4A5C51}
+.typespec b{font-weight:500;color:#24372F}
+.comp{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.comp i{display:block;flex:0 0 auto}
+.comp span{font-size:11px;color:#8C988E}
+.rules{font-size:12px;line-height:2.05;color:#4A5C51}
+.rules li{list-style:none}
+.rules li:before{content:"—";color:#9AAA9C;margin-right:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #EDF0EA;vertical-align:top;line-height:1.6}
+th{font-weight:500;color:#5B6B5F;background:#F6F8F4}
+td:first-child{width:120px;color:#5B6B5F;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.footnote{font-size:11px;color:#8C988E;margin-top:16px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">RIKEY / DESIGN SYSTEM V5 · A · 2026.11.07</div>
+      <h1>日课 · 界面设计定稿</h1>
+      <p class="lede">静气纸本 —— 米纸 / 墨绿 / 朱砂。首页、统计、背诵为 v24 实现态；读经屏为结构示意（实现沿用 v23 平铺版式 + 常驻入口）。</p>
+    </div>
+    <div class="meta">375 × 812 · 移动优先<br>单文件 · 内联样式 · 外部资源 0<br>状态：A 稿已选定并上线</div>
+  </header>
+
+  <div class="board">
+
+    <!-- 01 今日 -->
+    <div class="col">
+      <div class="col-label"><b>01</b> 今日 · 主卡 / 两课 / 趋势 <span>今日</span></div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>11 月 7 日 · 星期六</span><span>本地记录<i class="dot"></i></span></div>
+        <h1 class="page-title">今日功课</h1>
+        <p class="page-sub">已坚持 12 天 · 今日读诵 42 分</p>
+
+        <section class="hero">
+          <div class="hero-label">今日修习</div>
+          <div class="hero-main"><b class="hero-num">7</b><span class="hero-unit">遍</span><span class="streak-chip">连续 12 天</span></div>
+          <div class="hero-sub">心经 5 遍 · 道德经 2 遍</div>
+          <button class="hero-cta">继续诵读　→</button>
+        </section>
+
+        <div class="sec-head"><h3>两课</h3><span>点按进入背诵</span></div>
+        <button class="course"><span class="course-seal">心</span><span class="course-body"><b>般若波罗蜜多心经</b><span class="course-nums"><span><b>5</b>今日遍</span><span><b>166</b>累计遍</span><span><b>48</b>天数</span></span><small class="course-time">今日时长　32 分</small></span><span class="course-arrow">›</span></button>
+        <button class="course"><span class="course-seal">道</span><span class="course-body"><b>道德经</b><span class="course-nums"><span><b>2</b>今日遍</span><span><b>83</b>累计遍</span><span><b>31</b>天数</span></span><small class="course-time">今日时长　10 分</small></span><span class="course-arrow">›</span></button>
+
+        <div class="sec-head"><h3>近 7 日</h3><span>共 31 遍</span></div>
+        <div class="trend"><i class="trend-bar" style="height:22px"></i><i class="trend-bar" style="height:31px"></i><i class="trend-bar" style="height:17px"></i><i class="trend-bar" style="height:36px"></i><i class="trend-bar" style="height:26px"></i><i class="trend-bar" style="height:40px"></i><i class="trend-bar is-today" style="height:29px"></i></div>
+        <div class="trend-week"><span>六</span><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span class="is-today">五</span></div>
+        <p class="verse">致虚极，守静笃　—《道德经》十六章</p>
+      </div>
+      <nav class="tabbar">
+        <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg><span>今日</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 4.8 7.2 4.3 4 4.8v13c3.2-.5 6 0 8 1.7 2-1.7 4.8-2.2 8-1.7v-13c-3.2-.5-6 0-8 1.7z"/><path d="M12 6.5v13"/></svg><span>读经</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/></svg><span>统计</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span>我的</span></button>
+      </nav></div>
+      <div class="style-note"><h4>唯一焦点</h4><p>深墨绿主卡是整屏唯一实底；两课 112px 大卡、近 7 日趋势、短偈依次降级。主 CTA 全宽 44px，落在拇指热区。</p></div>
+    </div>
+
+    <!-- 02 读经 -->
+    <div class="col">
+      <div class="col-label"><b>02</b> 读经 · 新增常驻入口 <span>读经</span></div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>11 月 7 日 · 星期六</span><span>本地记录<i class="dot"></i></span></div>
+        <h1 class="page-title">读经典</h1>
+        <p class="page-sub">《道德经》王弼本 · 简体</p>
+        <div class="segment"><button class="on">《道德经》</button><button>《心经》</button></div>
+        <div class="read-tools"><span class="meta">第 01 章 · 共八十一章</span><span class="py">拼 · 开</span></div>
+        <section class="read-panel">
+          <h2>第一章</h2>
+          <div class="read-text">道可道，非常道；名可名，非常名。无名天地之始，有名万物之母。故常无欲，以观其妙；常有欲，以观其<ruby>徼<rt>jiào</rt></ruby>。此两者同出而异名，同谓之玄。玄之又玄，众妙之门。</div>
+        </section>
+        <section class="guide"><b>本章导读</b><p>可以用言语说清的「道」，就不是那个恒常不变的道；可以命名的「名」，也不是恒常的名。开篇先立起语言与实在之间的距离。</p></section>
+        <div class="read-actions"><button>← 上一章</button><button class="primary">标记读过</button><button>下一章 →</button></div>
+      </div>
+      <nav class="tabbar">
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg><span>今日</span></button>
+        <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 4.8 7.2 4.3 4 4.8v13c3.2-.5 6 0 8 1.7 2-1.7 4.8-2.2 8-1.7v-13c-3.2-.5-6 0-8 1.7z"/><path d="M12 6.5v13"/></svg><span>读经</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/></svg><span>统计</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span>我的</span></button>
+      </nav></div>
+      <div class="style-note"><h4>核心任务不再被藏起来</h4><p>v23 里读经没有常驻入口，只能绕路。v5 升为第 2 个 tab；拼音只标确定读音，用 ruby 浮在字上方。本屏为结构示意，实现沿用 v23 平铺版式与章节选择，只换米纸配色并补常驻入口。</p></div>
+    </div>
+
+    <!-- 03 统计 -->
+    <div class="col">
+      <div class="col-label"><b>03</b> 统计 · 连续 / 热力 / 趋势 <span>统计</span></div>
+      <div class="phone"><div class="screen stats-screen">
+        <div class="status"><span>11 月 7 日 · 星期六</span><span>本地记录<i class="dot"></i></span></div>
+        <h1 class="page-title">统计</h1>
+        <p class="page-sub">累计修习 79 天 · 历史最佳 21 天</p>
+        <div class="segment"><button class="on">心经</button><button>道德经</button></div>
+        <section class="streak-card"><div class="streak-seal"><b>12</b><small>连续天</small></div><div class="streak-copy"><h2>已连续 12 天</h2><p>历史最佳 21 天 · 再坚持 9 天刷新</p></div></section>
+        <div class="metrics"><div class="metric is-today"><span>今日</span><b>5<small> 遍</small></b><em>32 分</em></div><div class="metric"><span>本月</span><b>38<small> 遍</small></b><em>4 时 12 分</em></div><div class="metric"><span>累计</span><b>166<small> 遍</small></b><em>18 时 06 分</em></div></div>
+        <section class="card"><h3>修习热力 · 近 12 周</h3><div class="heat" id="heat"></div><div class="legend"><span>少</span><i style="background:var(--heat-0)"></i><i style="background:var(--heat-1)"></i><i style="background:var(--heat-2)"></i><i style="background:var(--heat-3)"></i><span>多</span></div><div class="editor"><b>修改本日记录</b><span>11-07 ›</span></div></section>
+        <section class="card"><h3>近 7 日　共 31 遍</h3><div class="trend"><i class="trend-bar" style="height:20px"></i><i class="trend-bar" style="height:30px"></i><i class="trend-bar" style="height:16px"></i><i class="trend-bar" style="height:34px"></i><i class="trend-bar" style="height:24px"></i><i class="trend-bar" style="height:38px"></i><i class="trend-bar is-today" style="height:28px"></i></div><div class="trend-week"><span>六</span><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span class="is-today">五</span></div></section>
+      </div>
+      <nav class="tabbar">
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7v9a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg><span>今日</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 4.8 7.2 4.3 4 4.8v13c3.2-.5 6 0 8 1.7 2-1.7 4.8-2.2 8-1.7v-13c-3.2-.5-6 0-8 1.7z"/><path d="M12 6.5v13"/></svg><span>读经</span></button>
+        <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M6.5 20.5v-6M12 20.5v-13M17.5 20.5v-9"/></svg><span>统计</span></button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span>我的</span></button>
+      </nav></div>
+      <div class="style-note"><h4>结构沿用 v23</h4><p>连续徽章、三格指标、12 周四级热力、近 7 日趋势、折叠编辑入口，全部是已验证交互，不为了「全新」推翻。</p></div>
+    </div>
+
+    <!-- 04 背诵 -->
+    <div class="col">
+      <div class="col-label"><b>04</b> 背诵 · 沉浸态 <span>导航隐藏</span></div>
+      <div class="phone"><div class="screen">
+        <div class="recite-head"><button class="back">‹</button><b>《道德经》</b><span class="tool">拼</span></div>
+        <div class="recite-meta"><span>第 1 章 · 今日 42 分</span><span>A−　A＋　✎</span></div>
+        <div class="recite-text"><p>道可道，非常道；名可名，非常名。无名天地之始，有名万物之母。故常无欲，以观其妙；常有欲，以观其<ruby>徼<rt>jiào</rt></ruby>。此两者同出而异名，同谓之玄。玄之又玄，众妙之门。</p></div>
+        <div class="counter-head"><i class="live"></i><span>诵读中</span><span class="tip">轻点任意处记一遍</span><button>↶ 撤销</button></div>
+        <div class="count-tap"><b class="tap-number">7</b><span class="tap-unit">遍</span><span class="tap-total">累计 83 遍</span></div>
+      </div>
+      <div class="immersive-note">全屏沉浸态 · 底部导航隐藏 · 左上「‹」返回今日</div></div>
+      <div class="style-note"><h4>单一主操作</h4><p>去掉两个木鱼，整块点击区 +1；撤销退到状态行右侧的小按钮。点按有 ＋1 浮字、涟漪、数字弹跳与触觉反馈。</p></div>
+    </div>
+
+  </div>
+
+  <!-- 规范板 -->
+  <div class="panel">
+    <h2>Design System · A 静气纸本</h2>
+    <div class="sub">与线上 v24 实现一一对应 · 改样式请看 DESIGN-v5.md</div>
+    <div class="grid2">
+      <div>
+        <h4>COLOR / 一个品牌色 + 一个强调色</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#F5F2E9"></i><b>米纸底</b><span>#F5F2E9</span></div>
+          <div class="sw"><i style="background:#FFFCF5"></i><b>卡片面</b><span>#FFFCF5</span></div>
+          <div class="sw"><i style="background:#E3DCCC"></i><b>分隔线</b><span>#E3DCCC</span></div>
+          <div class="sw"><i style="background:#24372F"></i><b>正文墨</b><span>#24372F</span></div>
+          <div class="sw"><i style="background:#2F5D50"></i><b>品牌墨绿</b><span>#2F5D50</span></div>
+          <div class="sw"><i style="background:#C0533B"></i><b>强调朱砂</b><span>#C0533B</span></div>
+          <div class="sw"><i style="background:#F8EDE6"></i><b>朱砂浅</b><span>#F8EDE6</span></div>
+        </div>
+        <h4 style="margin-top:18px">TYPE / 字阶</h4>
+        <div class="typespec"><b>46</b> 主数字　<b>25</b> 页面标题（宋体）<br><b>17</b> 卡片数字　<b>14</b> 卡片标题 / CTA<br><b>12</b> 说明　<b>11</b> 副行 / 导航文字　<b>10</b> 标签与单位<br>数字统一 <b>tabular-nums</b>；经文 18px / 行高 2.3 / 宋体</div>
+      </div>
+      <div>
+        <h4>COMPONENTS / 关键组件</h4>
+        <div class="comp"><i style="width:60px;height:30px;border-radius:7px;background:#2F5D50"></i><span>主卡 · 深墨绿实底，14px 圆角，无阴影</span></div>
+        <div class="comp"><i style="width:60px;height:30px;border-radius:6px;background:#C0533B"></i><span>主 CTA · 全宽 × 44px，朱砂，10px 圆角</span></div>
+        <div class="comp"><i style="width:60px;height:30px;border-radius:6px;background:#FFFCF5;border:1px solid #E3DCCC"></i><span>两课大卡 · ≥112px，纸面 + 1px 描边</span></div>
+        <div class="comp"><i style="width:44px;height:44px;border-radius:10px;background:#EFEADB"></i><span>印章 · 44×44，宋体「心 / 道」</span></div>
+        <div class="comp"><i style="width:60px;height:30px;border-radius:8px;background:#F8EDE6;border:1px solid #EBD9CD"></i><span>计数区 · 整块点击，撤销弱化为小按钮</span></div>
+        <h4 style="margin-top:18px">SPACING / 间距刻度</h4>
+        <div class="typespec">4 / 8 / 11 / 14 / 18 / 20　·　页面左右留白 <b>20px</b><br>底部导航 <b>54px</b> + 安全区　·　点击目标 <b>≥44px</b><br>动画 <b>≤0.6s</b>，仅 transform / opacity</div>
+      </div>
+    </div>
+
+    <div class="grid3" style="margin-top:22px;border-top:1px solid #EDF0EA;padding-top:18px">
+      <div>
+        <h4>RULES / 视觉底线</h4>
+        <ul class="rules">
+          <li>每屏只有一个视觉焦点</li>
+          <li>全站一个强调色，无阴影无渐变</li>
+          <li>高频操作放大，破坏性操作弱化</li>
+          <li>状态变化必须有即时反馈</li>
+          <li>正文对比度 ≥4.5:1</li>
+        </ul>
+      </div>
+      <div>
+        <h4>IA / 导航决策</h4>
+        <ul class="rules">
+          <li>4 项常驻：今日 / 读经 / 统计 / 我的</li>
+          <li>背诵不进导航（进入即隐藏导航）</li>
+          <li>选择页激活态回指「今日」</li>
+          <li>诵读页左上「‹」返回今日</li>
+          <li>两课卡直进对应经典，少一次点击</li>
+        </ul>
+      </div>
+      <div>
+        <h4>CHANGES / 相对比选稿</h4>
+        <table>
+          <tr><td>两课大卡</td><td>96px → <b>≥112px</b>，补今日时长行</td></tr>
+          <tr><td>首页数值</td><td>静态示例 → <b>state 实时计算</b></td></tr>
+          <tr><td>theme-color</td><td>统一改为 <b>#F5F2E9</b></td></tr>
+          <tr><td>版本</td><td>v23 → <b>v24</b>，SW 同步 bump</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="footnote">验收：375px 无横向滚动 · 四屏无裁切 · 无 JS 报错 · 外部资源 0 · 首页主数字 / 连续天数 / 近 7 日 / 累计 / 天数全部来自真实数据。<br>本稿可直接拖进 Pixso 作为视觉基准；推成可编辑节点需提供带 item-id 的设计文件链接。</div>
+  </div>
+</div>
+
+<script>
+// 热力格示意数据（静态稿，仅用于渲染，不依赖任何外部资源）
+var heat = document.getElementById('heat');
+if (heat) {
+  var html = '';
+  for (var w = 0; w < 12; w++) for (var d = 0; d < 7; d++) {
+    var lv = (w * 7 + d) % 9 === 0 ? 3 : (w + d) % 5 === 0 ? 2 : (w + d) % 3 === 0 ? 1 : 0;
+    var sel = (w === 11 && d === 4) ? ' sel' : '';
+    html += '<i class="heat-cell l' + lv + sel + '"></i>';
+  }
+  heat.innerHTML = html;
+}
+</script>
+</body>
+</html>

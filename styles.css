@@ -743,3 +743,80 @@ rt { font:400 10px/1 var(--font-sans); color:var(--cinnabar-ink); letter-spacing
   padding: 0;
   background: transparent;
 }
+
+/* ============================================================
+   v5 · A 静气纸本 · DESIGN-v5.md 唯一实现层（2026-11-07）
+   本段为最终覆盖层；历史层不再追加，新组件一律 v5- 前缀隔离
+   ============================================================ */
+:root {
+  --paper:#F5F2E9; --paper-deep:#EFEADB; --card:#FFFCF5;
+  --line:#E3DCCC; --line-strong:#D3C9B2;
+  --ink:#24372F; --ink-2:#5B6B5F; --muted:#8C9284;
+  --green:#2F5D50; --green-soft:#E7F0E9;
+  --cinnabar:#C0533B; --cinnabar-ink:#993C1D;
+  --cinnabar-soft:#F8EDE6; --cinnabar-line:#EBD9CD;
+  --heat-0:#EDEADF; --heat-1:#C6D8C6; --heat-2:#83AC93; --heat-3:#2F5D50;
+  --v5-radius:10px; --v5-radius-lg:14px;
+}
+html,body { background:var(--paper); }
+.app-shell { padding-left:20px; padding-right:20px; }
+#view-today { padding-top:18px; }
+/* Chrome 在 text-align:justify 下会把 rt 推到上一行；经文改左对齐，拼音才落在字正上方
+   注意：不要给 ruby 加 inline-block，那会把汉字挤出行流 */
+.classic-text,.recitation-text { text-align:left; }
+ruby { ruby-align:center; ruby-position:over; -webkit-ruby-position:before; }
+
+/* 首页 · 今日功课 */
+.v5-today { display:flex; flex-direction:column; min-height:calc(100vh - 136px); }
+.v5-status { display:flex; align-items:center; justify-content:space-between; height:18px; font-size:11px; color:var(--muted); letter-spacing:.04em; }
+.v5-dot { display:inline-block; width:6px; height:6px; margin-left:6px; border-radius:50%; background:var(--green); }
+.v5-page-title { font:500 25px/1.3 var(--font-classic); letter-spacing:-.01em; margin:12px 0 2px; }
+.v5-page-sub { font-size:11px; color:var(--muted); margin:0 0 14px; }
+.v5-hero { background:var(--green); color:var(--card); border-radius:var(--v5-radius-lg); padding:17px 18px 16px; }
+.v5-hero-label { font-size:11px; letter-spacing:.16em; color:rgba(255,252,245,.66); }
+.v5-hero-main { display:flex; align-items:baseline; gap:6px; margin-top:8px; }
+.v5-hero-num { font:500 46px/1 var(--font-sans); letter-spacing:-.04em; font-variant-numeric:tabular-nums; color:var(--card); }
+.v5-hero-unit { font-size:13px; color:rgba(255,252,245,.66); }
+.v5-streak-chip { margin-left:auto; padding:5px 10px; border-radius:999px; background:rgba(255,252,245,.16); color:var(--card); font-size:11px; white-space:nowrap; }
+.v5-hero-sub { font-size:12px; color:rgba(255,252,245,.7); margin-top:7px; }
+.v5-hero-cta { display:flex; align-items:center; justify-content:center; width:100%; height:44px; margin-top:15px; border:0; border-radius:var(--v5-radius); background:var(--cinnabar); color:#fff; font:500 14px/1 var(--font-sans); cursor:pointer; }
+.v5-hero-cta:active { opacity:.88; }
+.v5-sec-head { display:flex; align-items:baseline; justify-content:space-between; margin:16px 0 9px; }
+.v5-sec-head h3 { font-size:14px; font-weight:500; letter-spacing:.01em; margin:0; }
+.v5-sec-head span { font-size:11px; color:var(--muted); }
+.v5-course { display:flex; align-items:center; gap:12px; width:100%; min-height:112px; padding:14px; margin:0 0 9px; background:var(--card); border:1px solid var(--line); border-radius:var(--v5-radius); text-align:left; font:inherit; color:inherit; cursor:pointer; }
+.v5-course:active { background:var(--paper-deep); }
+.v5-course-seal { flex:0 0 44px; width:44px; height:44px; border-radius:var(--v5-radius); background:var(--paper-deep); color:var(--green); display:grid; place-items:center; font:500 21px/1 var(--font-classic); }
+.v5-course-body { flex:1; min-width:0; }
+.v5-course-body > b { display:block; font-size:14px; font-weight:500; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.v5-course-nums { display:flex; gap:14px; margin-top:8px; }
+.v5-course-nums > span { font-size:10px; color:var(--muted); white-space:nowrap; }
+.v5-course-nums b { display:block; font:500 17px/1.1 var(--font-sans); color:var(--ink); font-variant-numeric:tabular-nums; }
+.v5-course-time { display:block; font-size:10px; color:var(--muted); margin-top:8px; }
+.v5-course-arrow { font-size:19px; color:var(--muted); }
+.v5-trend { display:flex; align-items:flex-end; gap:7px; height:40px; padding:0 2px; }
+.v5-bar { flex:1; min-height:5px; border-radius:3px 3px 0 0; background:var(--heat-1); }
+.v5-bar.is-today { background:var(--cinnabar); }
+.v5-trend-week { display:flex; gap:7px; margin-top:5px; }
+.v5-trend-week span { flex:1; text-align:center; font-size:10px; color:var(--muted); }
+.v5-trend-week span.is-today { color:var(--cinnabar); }
+.v5-verse { margin:auto 0 0; padding:12px 0 4px; text-align:center; font:400 11px/1.6 var(--font-classic); letter-spacing:.08em; color:var(--muted); }
+
+/* 4 项导航：历史层是 3 列 grid，必须改成 flex 自适应，否则第 4 项会换行叠到第一项 */
+.app-shell .bottom-nav { display:flex; align-items:stretch; padding-left:6px; padding-right:6px; }
+.app-shell .nav-item { flex:1 1 0; min-width:0; }
+.app-shell .nav-item svg { width:19px; height:19px; }
+.app-shell .nav-item small { font-size:10px; }
+.app-shell .nav-item.active::before { width:18px; }
+
+/* 全站卡片圆角收敛到 v5 规范 */
+.ds-card,.streak-card,.report-summary,.report-calendar,.card { border-radius:var(--v5-radius-lg); }
+
+@media (max-width:360px) {
+  .v5-course-nums { gap:10px; }
+  .v5-hero-num { font-size:40px; }
+  .v5-streak-chip { padding:4px 8px; font-size:10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .v5-hero-cta,.v5-course { transition:none !important; }
+}

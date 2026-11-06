@@ -87,7 +87,8 @@
     reciteBook = null;
     document.querySelector('.app-shell').classList.remove('immersive');
     document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${name}`));
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.route === name));
+    const navTarget = name === 'recite' ? 'today' : name;
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.route === navTarget));
     history.replaceState(null, '', `#${name}`);
     render(); window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -151,9 +152,47 @@
     return { bars, labels, total: values.reduce((a, b) => a + b, 0), avg: Math.round(values.reduce((a, b) => a + b, 0) / days) };
   }
 
+  /* ===== v5 首页：今日功课（见 DESIGN-v5.md §3 / §6） ===== */
   function renderToday() {
-    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div><div class="practice-time">今日时长　${formatDuration(day().readingMs?.[book]||0)}</div></button></article>`;
-    document.getElementById('view-today').innerHTML=`${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
+    const now = day();
+    const heartN = Number(now.xinCount) || 0, daoN = Number(now.daoCount) || 0;
+    const total = heartN + daoN;
+    const streak = calcStreak('all');
+    const totalMs = (Number(now.readingMs?.heart) || 0) + (Number(now.readingMs?.dao) || 0);
+    const durLabel = ms => { const m = Math.floor(Math.max(0, ms) / 60000); return m >= 60 ? `${Math.floor(m / 60)} 时 ${String(m % 60).padStart(2, '0')} 分` : `${m} 分`; };
+    const nowDate = new Date();
+    const dateLabel = `${nowDate.getMonth() + 1} 月 ${nowDate.getDate()} 日 · ${['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][nowDate.getDay()]}`;
+    const dayCount = key => Object.values(state.days).filter(item => Number(item[key]) > 0).length;
+    const course = (name, book, seal, key) => `<button class="v5-course" data-action="open-recitation" data-book="${book}" aria-label="进入${name}背诵">
+        <span class="v5-course-seal">${seal}</span>
+        <span class="v5-course-body"><b>${name}</b>
+          <span class="v5-course-nums"><span><b>${Number(now[key]) || 0}</b>今日遍</span><span><b>${sum(key)}</b>累计遍</span><span><b>${dayCount(key)}</b>天数</span></span>
+          <small class="v5-course-time">今日时长　${durLabel(Number(now.readingMs?.[book]) || 0)}</small>
+        </span><span class="v5-course-arrow">›</span>
+      </button>`;
+    const dates = lastDays(7), values = dates.map(date => dayValue(date, 'all').n);
+    const max = Math.max(1, ...values), week = ['日', '一', '二', '三', '四', '五', '六'];
+    const bars = values.map((value, i) => `<i class="v5-bar${i === 6 ? ' is-today' : ''}" style="height:${Math.max(5, Math.round(value / max * 40))}px" title="${dates[i]} · ${value} 遍"></i>`).join('');
+    const labels = dates.map((date, i) => `<span class="${i === 6 ? 'is-today' : ''}">${week[new Date(date + 'T12:00:00').getDay()]}</span>`).join('');
+    const trendTotal = values.reduce((a, b) => a + b, 0);
+    document.getElementById('view-today').innerHTML = `<div class="v5-today">
+      <div class="v5-status"><span>${dateLabel}</span><span>本地记录<i class="v5-dot"></i></span></div>
+      <h1 class="v5-page-title">今日功课</h1>
+      <p class="v5-page-sub">${streak > 0 ? `已坚持 ${streak} 天` : '从今天开始'} · 今日读诵 ${durLabel(totalMs)}</p>
+      <section class="v5-hero">
+        <div class="v5-hero-label">今日修习</div>
+        <div class="v5-hero-main"><b class="v5-hero-num">${total}</b><span class="v5-hero-unit">遍</span><span class="v5-streak-chip">${streak > 0 ? `连续 ${streak} 天` : '今日开始'}</span></div>
+        <div class="v5-hero-sub">心经 ${heartN} 遍 · 道德经 ${daoN} 遍</div>
+        <button class="v5-hero-cta" data-route="recite">继续诵读　→</button>
+      </section>
+      <div class="v5-sec-head"><h3>两课</h3><span>点按进入背诵</span></div>
+      ${course('般若波罗蜜多心经', 'heart', '心', 'xinCount')}
+      ${course('道德经', 'dao', '道', 'daoCount')}
+      <div class="v5-sec-head"><h3>近 7 日</h3><span>共 ${trendTotal} 遍</span></div>
+      <div class="v5-trend">${bars}</div>
+      <div class="v5-trend-week">${labels}</div>
+      <p class="v5-verse">致虚极，守静笃　—《道德经》十六章</p>
+    </div>`;
   }
   function daoReader() {
     const chapter = window.DAO_DE_JING.chapters[chapterNumber - 1];
