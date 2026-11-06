@@ -729,3 +729,17 @@ rt { font:400 10px/1 var(--font-sans); color:var(--cinnabar-ink); letter-spacing
 @media (prefers-reduced-motion:reduce) {
   .count-tap.is-tapped .tap-ring,.count-tap.is-tapped .tap-pop,.tap-number.bump { animation:none !important; }
 }
+
+/* 诵读原文：保持编辑和阅读时一致的纸张卡片。 */
+.recitation-screen .recitation-text {
+  background: #fff;
+  border: 1px solid #a8bdb0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: #253c2d;
+}
+.recitation-screen .recitation-text .layout-content[contenteditable="true"] {
+  outline: none;
+  padding: 0;
+  background: transparent;
+}

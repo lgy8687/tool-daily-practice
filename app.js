@@ -152,44 +152,8 @@
   }
 
   function renderToday() {
-    const today = day();
-    const heart = Number(today.xinCount) || 0, dao = Number(today.daoCount) || 0;
-    const totalToday = heart + dao;
-    const msToday = (Number(today.readingMs?.heart) || 0) + (Number(today.readingMs?.dao) || 0);
-    const now = new Date(), weekNames = ['日', '一', '二', '三', '四', '五', '六'];
-    const streak = calcStreak('all'), trend = trendBars('all', 7);
-    const practicedDays = key => Object.values(state.days).filter(d => Number(d[key]) > 0).length;
-    const course = (name, book, key, mark, count, sub) => `<button class="course-row course-card" data-action="open-recitation" data-book="${book}">
-        <span class="card-top"><span class="course-seal">${mark}</span><span class="course-title"><b>${name}</b><small>${sub}</small></span><span class="course-arrow">›</span></span>
-        <span class="course-stats"><span><b>${count}</b><small>今日遍数</small></span><span><b>${sum(key)}</b><small>累计遍数</small></span><span><b>${practicedDays(key)}</b><small>修习天数</small></span></span>
-        <span class="course-foot"><span>今日时长 ${formatDurationShort(Number(today.readingMs?.[book]) || 0)}</span><span>进入背诵 →</span></span>
-      </button>`;
-    document.getElementById('view-today').innerHTML = `<header class="page-head">
-        <span class="eyebrow">日课 · RIKEY</span>
-        <h1 id="today-title">${now.getMonth() + 1} 月 ${now.getDate()} 日</h1>
-        <p class="page-head-date">星期${weekNames[now.getDay()]} · 宜诵读</p>
-      </header>
-      <section class="hero-card">
-        <div class="hero-top">
-          <div class="hero-main">
-            <span class="eyebrow">今日修习</span>
-            <div class="hero-number">${totalToday}<small>遍</small></div>
-            <p class="hero-sub">心经 ${heart} · 道德经 ${dao}　|　时长 ${formatDurationShort(msToday)}</p>
-          </div>
-          <div class="streak-seal"><b>${streak}</b><span>连续日</span></div>
-        </div>
-        <button class="hero-cta" data-action="count" data-key="xinCount">＋ 记一遍心经</button>
-        <p class="hero-foot">历史最佳 ${calcBest('all')} 天 · 累计 ${sum('xinCount') + sum('daoCount')} 遍</p>
-      </section>
-      <div class="section-head"><h2>今日两课</h2><span>点按卡片进入背诵</span></div>
-      ${course('般若波罗蜜多心经', 'heart', 'xinCount', '心', heart, '唐 · 玄奘译')}
-      ${course('道德经', 'dao', 'daoCount', '道', dao, '八十一章 · 王弼本')}
-      <section class="ds-card">
-        <div class="card-head"><h2>近七日</h2><span>日均 ${trend.avg} 遍 · 共 ${trend.total} 遍</span></div>
-        <div class="trend-bars">${trend.bars}</div>
-        <div class="trend-week">${trend.labels}</div>
-      </section>
-      <p class="daily-verse">「 日日行，不怕千万里 」<br>今天也留一页给自己</p>`;
+    const card=(name,book,key)=>`<article class="practice-card"><button class="practice-open" data-action="open-recitation" data-book="${book}"><h2>${name}</h2><div class="practice-numbers"><span><b>${day()[key]}</b>今日（遍）</span><span><b>${sum(key)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(d=>Number(d[key])>0).length}</b>天数</span></div><div class="practice-time">今日时长　${formatDuration(day().readingMs?.[book]||0)}</div></button></article>`;
+    document.getElementById('view-today').innerHTML=`${card('般若波罗蜜多心经','heart','xinCount')}${card('道德经','dao','daoCount')}`;
   }
   function daoReader() {
     const chapter = window.DAO_DE_JING.chapters[chapterNumber - 1];
