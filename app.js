@@ -282,7 +282,7 @@
     if (!reciteBook) {
       shell.classList.remove('immersive');
       const choice = (book, name, seal, sub, key) => `<button class="recite-choice" data-action="open-recitation" data-book="${book}"><span class="choice-seal">${seal}</span><span class="choice-body"><b>${name}</b><small>${sub}</small></span><span class="choice-meta"><b>${sum(key)}</b><small>累计遍数</small></span><span class="choice-arrow">›</span></button>`;
-      node.innerHTML=`<div class="page-intro"><h1 id="recite-title">选择背诵内容</h1></div><div class="recite-choices">${choice('dao','《道德经》','道','八十一章 · 王弼本','daoCount')}${choice('heart','《心经》','心','唐 · 玄奘译','xinCount')}${choice('cao','曹操的诗','曹','五首 · 建安乐府','caoCount')}</div><p class="choice-note">诵读时自动计时 · 轻点记一遍<br>曹操诗据《乐府诗集》通行本整理 · 记录只保存在这台设备</p>`;
+      node.innerHTML=`<div class="page-intro"><h1 id="recite-title">选择背诵内容</h1></div><div class="recite-choices">${choice('dao','《道德经》','道','八十一章 · 王弼本','daoCount')}${choice('heart','《心经》','心','唐 · 玄奘译','xinCount')}${choice('cao','曹操的诗','曹',`${window.CAO_POEMS.poems.length} 首 · 建安乐府`,'caoCount')}</div><p class="choice-note">诵读时自动计时 · 轻点记一遍<br>曹操诗据《乐府诗集》通行本整理 · 记录只保存在这台设备</p>`;
       return;
     }
     shell.classList.add('immersive');
