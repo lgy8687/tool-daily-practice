@@ -748,3 +748,7 @@ rt { font:400 10px/1 var(--font-sans); color:var(--cinnabar-ink); letter-spacing
    经文改左对齐，拼音才会落在对应汉字正上方。不要给 ruby 加 inline-block。 */
 .classic-text,.recitation-text { text-align:left; }
 ruby { ruby-align:center; ruby-position:over; -webkit-ruby-position:before; }
+
+/* v27 统一规范：背诵页标题行单独成行，与下方计时/字体工具栏明确区隔 */
+.recite-header .recite-title-row { height:auto; min-height:38px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.recite-header .recite-meta-row { margin-top:8px; }
