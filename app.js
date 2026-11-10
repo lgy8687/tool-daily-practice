@@ -27,7 +27,7 @@
   let readingBook = 'dao';
   let reciteBook = null;
   let reciteChapter = 1;
-  const fontKey = () => reciteBook === 'heart' ? 'rikey.fontSize.heart' : isCustomBook(reciteBook) ? `rikey.fontSize.user.${reciteBook}.${reciteChapter}` : reciteBook === 'cao' ? `rikey.fontSize.cao.${reciteChapter}` : `rikey.fontSize.dao.${reciteChapter}`;
+  const fontKey = () => reciteBook === 'heart' && reciteChapter > 1 ? `rikey.fontSize.heart.${reciteChapter}` : reciteBook === 'heart' ? 'rikey.fontSize.heart' : isCustomBook(reciteBook) ? `rikey.fontSize.user.${reciteBook}.${reciteChapter}` : reciteBook === 'cao' ? `rikey.fontSize.cao.${reciteChapter}` : `rikey.fontSize.dao.${reciteChapter}`;
   const currentFontSize = () => Number(localStorage.getItem(fontKey())) || 18;
   let layoutEditing = false;
   let chapterNumber = 1;
@@ -105,6 +105,7 @@
     if (!state.library.pieces || typeof state.library.pieces !== 'object' || Array.isArray(state.library.pieces)) state.library.pieces = {};
     if (!Array.isArray(state.library.books)) state.library.books = [];
     if (!Array.isArray(state.library.pieces.cao)) state.library.pieces.cao = [];
+    if (!Array.isArray(state.library.pieces.heart)) state.library.pieces.heart = [];
     return state.library;
   }
   function isCustomBook(id) { return userLibrary().books.some(book => book && book.id === id); }
@@ -129,20 +130,26 @@
       item.userCounts[book.id] = value;
     } else item[book.countKey] = value;
   }
+  function extraPieces(list, startNumber) {
+    return (Array.isArray(list) ? list : []).filter(piece => piece && String(piece.title || '').trim()).map((piece, index) => ({
+      number: startNumber + index,
+      title: String(piece.title).trim(),
+      text: String(piece.text || ''),
+      meta: '自己添加',
+      translation: '',
+      note: '',
+      user: true
+    }));
+  }
   function piecesOf(bookId) {
+    if (bookId === 'heart') {
+      const base = [{ number: 1, title: '心经', text: HEART.map(segment => segment.text).join('\n'), meta: '唐 · 玄奘译', translation: HEART_TRANSLATION, note: '', builtin: true }];
+      return base.concat(extraPieces(userLibrary().pieces.heart, 2));
+    }
     if (bookId === 'dao' && window.DAO_DE_JING) return window.DAO_DE_JING.chapters;
     if (bookId === 'cao' && window.CAO_POEMS) {
       const base = window.CAO_POEMS.poems;
-      const extra = userLibrary().pieces.cao.filter(piece => piece && String(piece.title || '').trim()).map((piece, index) => ({
-        number: base.length + index + 1,
-        title: String(piece.title).trim(),
-        text: String(piece.text || ''),
-        meta: '自己添加',
-        translation: '',
-        note: '',
-        user: true
-      }));
-      return base.concat(extra);
+      return base.concat(extraPieces(userLibrary().pieces.cao, base.length + 1));
     }
     const custom = userLibrary().books.find(book => book && book.id === bookId);
     if (!custom) return [];
@@ -302,7 +309,7 @@
   function renderRead() {
     document.getElementById('view-read').innerHTML = `<div class="page-intro"><h1 id="read-title">读经典</h1></div><div class="switcher"><button class="pill ${readingBook === 'dao' ? 'active' : ''}" data-action="book" data-book="dao">《道德经》</button><button class="pill ${readingBook === 'heart' ? 'active' : ''}" data-action="book" data-book="heart">《心经》</button></div><div class="reader-tools"><button class="pinyin-toggle ${pinyinOn()?'on':''}" data-action="toggle-pinyin" aria-pressed="${pinyinOn()}">拼音标注 · ${pinyinOn()?'开':'关'}</button></div>${readingBook === 'dao' ? daoReader() : heartReader()}<p class="source-note">《道德经》王弼本，简体转换；注释为白话导读。<br>《心经》玄奘译本。<br><a href="https://zh.wikisource.org/zh-hans/道德经_(王弼本)" target="_blank" rel="noreferrer">原文来源</a> · <a href="https://zh.wikisource.org/zh-hans/般若波罗蜜多心经_(玄奘)" target="_blank" rel="noreferrer">心经来源</a></p>`;
   }
-  function layoutBaseKey() { return reciteBook === 'heart' ? 'heart' : isCustomBook(reciteBook) ? `user:${reciteBook}:${reciteChapter}` : reciteBook === 'cao' ? `cao:${reciteChapter}` : `dao:${reciteChapter}`; }
+  function layoutBaseKey() { return reciteBook === 'heart' && reciteChapter > 1 ? `heart:${reciteChapter}` : reciteBook === 'heart' ? 'heart' : isCustomBook(reciteBook) ? `user:${reciteBook}:${reciteChapter}` : reciteBook === 'cao' ? `cao:${reciteChapter}` : `dao:${reciteChapter}`; }
   /* v27 起拼音标注对三课统一生效；兼容旧版只用于道德经的开关 key */
   const PINYIN_KEY = 'rikey.pinyin.all';
   const LEGACY_PINYIN_KEY = 'rikey.pinyin.dao';
@@ -409,7 +416,7 @@
   function chapterDialog(bookId) {
     const isDao=bookId==='dao';
     const items=piecesOf(bookId);
-    const unit=isDao ? '章' : '首';
+    const unit=isDao ? '章' : bookId==='heart' ? '篇' : '首';
     const showTitle=!isDao;
     const tiles=items.map(item=>{
       const open=openingLine(item.text);
@@ -418,7 +425,7 @@
       const label=[`第${item.number}${unit}`, title, open].filter(Boolean).join('，');
       return `<button type="button" class="chapter-tile${selected?' selected':''}" data-action="choose-chapter" data-number="${item.number}" aria-label="${esc(label)}" aria-current="${selected?'true':'false'}"><span class="chapter-index">${esc(String(item.number).padStart(2,'0'))}</span><span class="chapter-copy">${title?`<span class="chapter-name">${esc(title)}</span>`:''}<span class="chapter-open">${esc(open || '（这篇没有正文）')}</span></span></button>`;
     }).join('');
-    const add=(bookId==='cao' || isCustomBook(bookId)) ? `<button type="button" class="chapter-add" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button>` : '';
+    const add=(bookId==='cao' || bookId==='heart' || isCustomBook(bookId)) ? `<button type="button" class="chapter-add" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button>` : '';
     const heading=isDao ? '选择章节' : '选择篇目';
     return `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="${heading}"><div class="chapter-dialog-head"><h2>${heading}</h2><button type="button" data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${tiles}${add}</div></dialog>`;
   }
@@ -429,14 +436,17 @@
     if(reciteChapter<1) reciteChapter=1;
     const piece=pieces[reciteChapter-1];
     const isDao=bookId==='dao';
-    const position=isDao ? `第 ${piece.number} 章` : `第 ${piece.number} 首 · ${esc(piece.title)}`;
+    const unit=isDao ? '章' : bookId==='heart' ? '篇' : '首';
+    const position=isDao ? `第 ${piece.number} 章` : `第 ${piece.number} ${unit} · ${esc(piece.title)}`;
     const guide=isDao ? `<p>${esc(piece.note||'')}</p>` : `<p>${esc(piece.note || (piece.user ? '这是你添加的一篇。' : ''))}</p>${bookId==='cao' && !piece.user ? `<p class="muted">${esc(window.CAO_POEMS.edition)}</p>` : ''}`;
     const noteTitle=isDao ? '本章导读' : '本篇导读';
-    const add=(bookId==='cao' || isCustomBook(bookId)) ? `<button type="button" class="add-piece inline-add" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button>` : '';
+    const add=(bookId==='cao' || bookId==='heart' || isCustomBook(bookId)) ? `<button type="button" class="add-piece inline-add" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button>` : '';
     return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">${position}</button>${piece.meta?`<div class="reading-meta">${esc(piece.meta)}</div>`:''}<div class="classic-text recitation-text">${layoutBlock("original", piece.text || '')}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation", piece.translation || '', "translation-layout")}</details><details class="annotation-fold"><summary>${noteTitle}</summary>${guide}</details>${add}</div>`;
   }
   function reciteChrome(name) {
-    return `<div class="recite-header"><div class="recite-title-row"><button type="button" class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1 id="recite-title">${name}</h1></div><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div></div>`;
+    const canAdd=reciteBook==='heart' || reciteBook==='cao' || isCustomBook(reciteBook);
+    const add=canAdd ? `<button type="button" class="add-piece-link" data-action="add-piece" data-book="${esc(reciteBook)}">添加一篇</button>` : '';
+    return `<div class="recite-header"><div class="recite-title-row"><button type="button" class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1 id="recite-title">${name}</h1></div><div class="timer-row"><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div>${add}</div></div>`;
   }
   function readDock() {
     const on=pinyinOn();
@@ -470,9 +480,11 @@
     const customBook=allBooks().find(entry=>entry.id===reciteBook && entry.custom);
     const bookName=isHeart?'《心经》':customBook?customBook.cardTitle:reciteBook==='cao'?'曹操的诗':'《道德经》';
     const countKey=isHeart?'xinCount':reciteBook==='cao'?'caoCount':reciteBook==='dao'?'daoCount':'user';
-    const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : collectionContent(reciteBook);
+    const heartOriginal=`<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details><button type="button" class="add-piece inline-add" data-action="add-piece" data-book="heart">添加一篇</button>`;
+    const heartPieces=isHeart ? piecesOf('heart') : [];
+    const content=isHeart && reciteChapter<=1 ? `${heartPieces.length>1?`<button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 1 篇 · 心经</button>`:''}${heartOriginal}` : collectionContent(reciteBook);
     layoutEditing=false;
-    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px">${reciteChrome(bookName)}${content}${isHeart ? '' : chapterDialog(reciteBook)}<div class="recite-footer">${readDock()}<div class="recite-actions">${reciteFooter(countKey)}</div></div></div>`;
+    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px">${reciteChrome(bookName)}${content}${isHeart && heartPieces.length<2 ? '' : chapterDialog(reciteBook)}<div class="recite-footer">${readDock()}<div class="recite-actions">${reciteFooter(countKey)}</div></div></div>`;
     syncFontControls();
   }
   let turningChapter = false;
@@ -551,6 +563,11 @@
     return `<svg viewBox="0 0 200 200" aria-hidden="true">${arcs}</svg>`;
   }
   function bookProfile(id) {
+    if (id==='heart') {
+      const pieces=piecesOf('heart');
+      if (pieces.length<=1) return { kind:'single', label:'一篇', unit:'篇', pieces:[] };
+      return { kind:'collection', label:`${pieces.length} 篇`, unit:'篇', pieces:pieces.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`heart:${ch.number}` })) };
+    }
     if (id==='dao' && window.DAO_DE_JING && Array.isArray(window.DAO_DE_JING.chapters) && window.DAO_DE_JING.chapters.length>1) {
       return { kind:'collection', label:`${window.DAO_DE_JING.chapters.length} 章`, unit:'章', pieces:window.DAO_DE_JING.chapters.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`dao:${ch.number}` })) };
     }
@@ -853,7 +870,10 @@
       return;
     }
     const bookId=composeMode && composeMode.bookId;
-    if(bookId==='cao') lib.pieces.cao.push({id:'p'+Date.now().toString(36), title, text});
+    if(bookId==='cao' || bookId==='heart') {
+      if(!Array.isArray(lib.pieces[bookId])) lib.pieces[bookId]=[];
+      lib.pieces[bookId].push({id:'p'+Date.now().toString(36), title, text});
+    }
     else {
       const book=lib.books.find(item=>item.id===bookId);
       if(!book) { showToast('没有找到这张卡片'); return; }
