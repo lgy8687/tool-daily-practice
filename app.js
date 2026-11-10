@@ -133,11 +133,11 @@
   window.addEventListener('pagehide',()=>flushTimer());
   window.addEventListener('pageshow',()=>{if(timerStart) flushTimer(); updateTimerDisplay();});
   setInterval(()=>{ if(timerStart && Date.now()-timerStart>=5000) flushTimer(); updateTimerDisplay(); },1000);
-  function routeTo(name) {
+  function routeTo(name, keepStats) {
     flushTimer(true);
     route = name;
     layoutEditing=false;
-    statsFocus=null;
+    if (!keepStats) statsFocus=null;
     reciteBook = null;
     document.querySelector('.app-shell').classList.remove('immersive');
     document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${name}`));
@@ -224,7 +224,7 @@
     const card = book => {
       const index = report.books.findIndex(item => item.id === book.id);
       const seconds = index >= 0 ? report.clocks.seconds[index] : 0;
-      return `<article class="practice-card"><button type="button" class="practice-open" data-action="open-recitation" data-book="${book.id}"><h2>${book.cardTitle}</h2><div class="practice-numbers"><span><b>${day()[book.countKey]}</b>今日（遍）</span><span><b>${sum(book.countKey)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(item => Number(dayRecord(item)?.[book.countKey]) > 0).length}</b>天数</span></div><div class="practice-time">总时间　${TimeStats.formatSeconds(seconds)}</div></button></article>`;
+      return `<article class="practice-card"><button type="button" class="card-stats" data-action="open-book-stats" data-book="${book.id}" aria-label="查看${book.name}的统计"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M7.5 19.5v-6M12 19.5V8M16.5 19.5v-9"/></svg></button><button type="button" class="practice-open" data-action="open-recitation" data-book="${book.id}"><h2>${book.cardTitle}</h2><div class="practice-numbers"><span><b>${day()[book.countKey]}</b>今日（遍）</span><span><b>${sum(book.countKey)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(item => Number(dayRecord(item)?.[book.countKey]) > 0).length}</b>天数</span></div><div class="practice-time">总时间　${TimeStats.formatSeconds(seconds)}</div></button></article>`;
     };
     document.getElementById('view-today').innerHTML = BOOKS.map(card).join('');
   }
@@ -652,7 +652,9 @@
     }
     if (action === 'open-book-stats' || action === 'stats-book') {
       if(!TimeStats.isBookId(button.dataset.book)) return;
-      statsFocus=button.dataset.book; statsBook=statsFocus; renderStats(); window.scrollTo(0,0); return;
+      statsFocus=button.dataset.book; statsBook=statsFocus;
+      if (route==='stats') { renderStats(); window.scrollTo(0,0); return; }
+      routeTo('stats', true); return;
     }
     if (action === 'close-book-stats') { statsFocus=null; renderStats(); window.scrollTo(0,0); return; }
     if (action === 'stats-day') { statsSelectedDate=button.dataset.date; renderStats(); return; }

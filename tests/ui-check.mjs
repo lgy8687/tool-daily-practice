@@ -102,7 +102,22 @@ try {
   assert(!(await emptyPhone.page.$('#fixture-banner')), '真实空数据不应出现测试数据条');
   const overflow = await emptyPhone.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(overflow <= 1, `390px 首页横向溢出 ${overflow}`);
+  const statsIcon = await emptyPhone.page.evaluate(() => {
+    const card = document.querySelector('.practice-card');
+    const icon = card.querySelector('.card-stats');
+    const cardBox = card.getBoundingClientRect();
+    const iconBox = icon.getBoundingClientRect();
+    return { label: icon.getAttribute('aria-label'), right: cardBox.right - iconBox.right, top: iconBox.top - cardBox.top, count: document.querySelectorAll('.card-stats').length };
+  });
+  assert(statsIcon.count === 3, '每张卡都要有统计入口');
+  assert(statsIcon.right <= 12 && statsIcon.top <= 12, `统计图标不在右上角 ${statsIcon.top},${statsIcon.right}`);
   await shot(emptyPhone.page, 'home-390.png');
+  await emptyPhone.page.click('.card-stats[data-book="dao"]');
+  await emptyPhone.page.waitForSelector('#view-stats.active [data-kind="collection"]');
+  const fromCard = await emptyPhone.page.$eval('#stats-title', node => node.textContent);
+  assert(fromCard.includes('道德经'), `卡面统计应进入这本书：${fromCard}`);
+  await emptyPhone.page.click('[data-route="today"]');
+  await emptyPhone.page.waitForSelector('#view-today.active .practice-card');
 
   await emptyPhone.page.click('[data-route="stats"]');
   await emptyPhone.page.waitForSelector('#time-dist .donut');
@@ -183,7 +198,7 @@ try {
   assert(visible.some(button => button.text === '排版'), '排版应直接可见');
   visible.forEach(button => {
     assert(button.box.top >= header.headerBottom, `${button.text} 仍贴在标题下`);
-    assert(button.box.width >= 32 && button.box.height >= 32 && button.box.height <= 36, `${button.text} 尺寸不合适 ${button.box.width}x${button.box.height}`);
+    assert(button.box.height >= 22 && button.box.height <= 26, `${button.text} 仍然偏大 ${button.box.width}x${button.box.height}`);
     assert(button.label || button.text, `${button.text} 缺少可访问名称`);
   });
   assert(header.back.width >= 40 && header.back.height >= 40, '返回按钮触控区域过小');
