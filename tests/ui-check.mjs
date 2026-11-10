@@ -163,33 +163,32 @@ try {
   await emptyPhone.page.waitForSelector('.recite-header');
   const header = await emptyPhone.page.evaluate(() => {
     const timer = document.querySelector('#reading-timer')?.textContent || '';
-    const buttons = [...document.querySelectorAll('.recite-meta-row button')].map(node => ({
+    const headerBottom = document.querySelector('.recite-header')?.getBoundingClientRect().bottom || 0;
+    const buttons = [...document.querySelectorAll('.read-tools button')].map(node => ({
       text: node.textContent.trim(),
       label: node.getAttribute('aria-label'),
       box: node.getBoundingClientRect().toJSON(),
       hidden: node.offsetParent === null
     }));
     const back = document.querySelector('.back-button')?.getBoundingClientRect().toJSON();
-    const panelHidden = document.querySelector('#read-settings')?.hidden;
-    return { timer, buttons, back, panelHidden, title: document.querySelector('#recite-title')?.textContent || '' };
+    return { timer, buttons, back, headerBottom, title: document.querySelector('#recite-title')?.textContent || '', settings: !!document.querySelector('.read-settings-button') };
   });
   assert(header.title.includes('心经'), '阅读标题应保留');
   assert(header.timer.startsWith('今日'), `阅读顶部计时应保持今日语义：${header.timer}`);
   assert(!header.timer.includes('总时间'), '阅读顶部不要改成总时间');
-  assert(header.panelHidden, '阅读设置默认收起');
+  assert(!header.settings, '字号和排版不应再收进阅读设置');
   const visible = header.buttons.filter(button => !button.hidden);
-  assert(visible.some(button => button.text.includes('拼音')), '拼音应能在顶部一键切换');
-  assert(visible.some(button => button.text === '阅读设置'), '低频排版应收进阅读设置');
-  assert(!visible.some(button => button.text.includes('A')), '字号按钮不应再铺在顶部');
+  assert(visible.some(button => button.text.includes('拼音')), '拼音应能直接切换');
+  assert(visible.some(button => button.text.includes('A−')) && visible.some(button => button.text.includes('A＋')), '字号应直接可见');
+  assert(visible.some(button => button.text === '排版'), '排版应直接可见');
   visible.forEach(button => {
+    assert(button.box.top >= header.headerBottom, `${button.text} 仍贴在标题下`);
     assert(button.box.width >= 40 && button.box.height >= 40, `${button.text} 触控区域过小 ${button.box.width}x${button.box.height}`);
     assert(button.label || button.text, `${button.text} 缺少可访问名称`);
   });
   assert(header.back.width >= 40 && header.back.height >= 40, '返回按钮触控区域过小');
   await shot(emptyPhone.page, 'read-header-390.png');
 
-  await emptyPhone.page.click('[data-action="toggle-read-settings"]');
-  await emptyPhone.page.waitForSelector('#read-settings:not([hidden])');
   const fontBefore = await emptyPhone.page.$eval('#font-size-label', node => node.textContent);
   await emptyPhone.page.click('[data-action="font-larger"]');
   const fontAfter = await emptyPhone.page.$eval('#font-size-label', node => node.textContent);
@@ -197,7 +196,7 @@ try {
   assert(Number(fontAfter) === Number(fontBefore) + 1, '放大字体应改变字号');
   assert(textSize === `${fontAfter}px`, '字号应写到正文');
   await emptyPhone.page.click('[data-action="font-smaller"]');
-  await shot(emptyPhone.page, 'read-settings-390.png');
+  await shot(emptyPhone.page, 'read-tools-390.png');
   await emptyPhone.page.click('.settings-edit');
   await emptyPhone.page.waitForSelector('.editing-layout .layout-toolbar');
   const editing = await emptyPhone.page.evaluate(() => ({
