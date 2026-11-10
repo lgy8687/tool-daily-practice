@@ -183,7 +183,7 @@ try {
   assert(visible.some(button => button.text === '排版'), '排版应直接可见');
   visible.forEach(button => {
     assert(button.box.top >= header.headerBottom, `${button.text} 仍贴在标题下`);
-    assert(button.box.width >= 40 && button.box.height >= 40, `${button.text} 触控区域过小 ${button.box.width}x${button.box.height}`);
+    assert(button.box.width >= 32 && button.box.height >= 32 && button.box.height <= 36, `${button.text} 尺寸不合适 ${button.box.width}x${button.box.height}`);
     assert(button.label || button.text, `${button.text} 缺少可访问名称`);
   });
   assert(header.back.width >= 40 && header.back.height >= 40, '返回按钮触控区域过小');

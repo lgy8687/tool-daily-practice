@@ -809,15 +809,16 @@ ruby { ruby-align:center; ruby-position:over; -webkit-ruby-position:before; }
 .recite-header .recite-title-row h1 { font-family:var(--font-classic); font-size:18px; font-weight:500; }
 .recite-header .back-button { width:44px; height:44px; padding:0; display:grid; place-items:center; font-size:28px; line-height:1; color:var(--ink); }
 .recite-header .reading-timer { display:block; margin:6px 0 0; padding:0; font-size:13px; line-height:1.3; color:var(--ink-2); text-align:left; white-space:nowrap; }
-.app-shell.immersive { padding-bottom:168px; }
-.recitation-screen .recite-footer { display:flex; flex-direction:column; gap:8px; }
+.app-shell.immersive { padding-bottom:132px; }
+.recitation-screen .recite-footer { display:flex; flex-direction:column; gap:6px; }
 .recitation-screen.editing-layout .recite-footer { display:flex; }
-.read-dock { display:flex; flex-direction:column; gap:8px; }
-.read-tools .pinyin-button,.font-step button,.read-tools .settings-edit,.layout-done { min-width:44px; min-height:44px; padding:0 12px; }
+.read-dock { display:flex; flex-direction:column; gap:0; }
+.read-tools .pinyin-button,.font-step button,.read-tools .settings-edit,.layout-done { min-width:32px; height:32px; min-height:32px; padding:0 8px; border-radius:8px; font-size:13px; }
 .read-tools .settings-edit { min-width:0; }
-.read-tools { display:flex; align-items:center; gap:8px; }
-.font-step { display:flex; align-items:center; gap:4px; margin-left:auto; }
-.font-step b { min-width:28px; text-align:center; font-size:16px; font-weight:500; font-variant-numeric:tabular-nums; }
+.read-tools { display:flex; align-items:center; gap:6px; }
+.font-step { display:flex; align-items:center; gap:2px; margin-left:auto; }
+.font-step b { min-width:22px; text-align:center; font-size:14px; font-weight:500; font-variant-numeric:tabular-nums; }
+.recitation-screen .layout-toolbar button { min-width:32px; height:32px; font-size:14px; }
 .recitation-screen .layout-toolbar { display:none; position:static; width:auto; max-width:none; margin:0; padding:0; border:0; background:transparent; }
 .recitation-screen.editing-layout .layout-toolbar { display:flex; }
 .recitation-screen.editing-layout .read-tools { display:none; }
