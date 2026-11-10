@@ -766,12 +766,32 @@ ruby { ruby-align:center; ruby-position:over; -webkit-ruby-position:before; }
 .donut-center span { margin-top:3px; font-size:12px; color:var(--ink-2); }
 .time-empty,.time-round { margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--ink-2); }
 .time-list { list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; }
-.time-list button { display:grid; grid-template-columns:12px minmax(0,1fr) auto auto; gap:8px; align-items:center; width:100%; min-height:48px; padding:8px 10px; border:1px solid transparent; border-radius:12px; background:transparent; color:inherit; text-align:left; cursor:pointer; }
-.time-list button[aria-pressed="true"] { background:var(--green-soft); border-color:var(--green); }
+.time-list button { display:grid; grid-template-columns:12px minmax(0,1fr) auto auto 14px; gap:8px; align-items:center; width:100%; min-height:48px; padding:8px 10px; border:1px solid transparent; border-radius:12px; background:transparent; color:inherit; text-align:left; cursor:pointer; }
+.time-list button:active { background:var(--green-soft); }
+.time-name b { display:block; font-weight:500; }
+.time-go { color:var(--ink-2); font-size:18px; line-height:1; text-align:right; }
+.book-find { display:flex; align-items:center; gap:8px; margin:0 0 12px; color:var(--ink-2); font-size:13px; }
+.book-find input { flex:1; min-height:44px; border:1px solid var(--line-strong); border-radius:12px; background:var(--card); color:var(--ink); padding:0 12px; font-size:15px; }
+.book-find-empty { margin:0 0 12px; color:var(--ink-2); font-size:13px; }
+.stats-back-row { display:flex; align-items:center; gap:8px; min-height:44px; margin:0 0 8px; }
+.stats-back { width:44px; height:44px; border:0; border-radius:12px; background:transparent; color:var(--ink); font-size:28px; line-height:1; cursor:pointer; }
+.stats-back-row h1 { margin:0; font:500 24px/32px var(--font-classic); }
+.stats-kind,.piece-note { margin:0 0 12px; font-size:13px; line-height:1.6; color:var(--ink-2); }
+.book-total { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 12px; padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:var(--card); }
+.book-total span { font-size:13px; color:var(--ink-2); }
+.book-total b { font-size:20px; font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.piece-list { list-style:none; margin:0; padding:0; }
+.piece-row { display:grid; grid-template-columns:32px minmax(0,1fr) auto; gap:10px; align-items:center; min-height:48px; border-top:1px solid var(--line); }
+.piece-row:first-child { border-top:0; }
+.piece-index { font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:13px; }
+.piece-copy { min-width:0; }
+.piece-copy b { display:block; font-weight:500; font-size:14px; font-family:var(--font-classic); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.piece-copy small { display:block; margin-top:1px; color:var(--ink-2); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.piece-stat { font-size:12px; color:var(--ink-2); white-space:nowrap; }
 .time-list .swatch { width:10px; height:10px; border-radius:50%; display:block; }
 .time-list .swatch.is-empty { background:transparent; border:1px solid var(--line-strong); }
 .time-name { font-size:14px; color:var(--ink); min-width:0; }
-.time-name small { display:block; margin-top:1px; font-size:11px; color:var(--ink-2); font-weight:400; }
+.time-name small { display:block; margin-top:1px; font-size:11px; color:var(--ink-2); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .time-dur,.time-pct { font-variant-numeric:tabular-nums; white-space:nowrap; font-size:13px; }
 .time-dur { color:var(--ink); }
 .time-pct { min-width:68px; text-align:right; color:var(--ink-2); }

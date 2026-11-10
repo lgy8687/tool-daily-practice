@@ -32,6 +32,7 @@
   let layoutEditing = false;
   let chapterNumber = 1;
   let statsBook = 'heart';
+  let statsFocus = null;
   let statsMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1);
   let statsSelectedDate = localDate();
   let toastTimer;
@@ -60,7 +61,7 @@
       } };
     }
     return { version: 1, settings, days: {
-      '2026-11-01': { xinCount: 2, daoCount: 1, caoCount: 1, readings: ['heart'], readingMs: { heart: 3600000 + 5 * 60000 + 3000, dao: 26 * 60000 } },
+      '2026-11-01': { xinCount: 2, daoCount: 1, caoCount: 1, readings: ['heart', 'dao:1', 'dao:8'], readingMs: { heart: 3600000 + 5 * 60000 + 3000, dao: 26 * 60000 } },
       '2026-11-07': { xinCount: 1, daoCount: 0, caoCount: 2, readingMs: { cao: 40000 } },
       '2025-06-01': { daoCount: 4 },
       '2025-06-02': { readingMs: { heart: null, dao: undefined } }
@@ -136,6 +137,7 @@
     flushTimer(true);
     route = name;
     layoutEditing=false;
+    statsFocus=null;
     reciteBook = null;
     document.querySelector('.app-shell').classList.remove('immersive');
     document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${name}`));
@@ -453,6 +455,24 @@
     }).join('');
     return `<svg viewBox="0 0 200 200" aria-hidden="true">${arcs}</svg>`;
   }
+  function bookProfile(id) {
+    if (id==='dao' && window.DAO_DE_JING && Array.isArray(window.DAO_DE_JING.chapters) && window.DAO_DE_JING.chapters.length>1) {
+      return { kind:'collection', label:`${window.DAO_DE_JING.chapters.length} 章`, unit:'章', pieces:window.DAO_DE_JING.chapters.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`dao:${ch.number}` })) };
+    }
+    if (id==='cao' && window.CAO_POEMS && Array.isArray(window.CAO_POEMS.poems) && window.CAO_POEMS.poems.length>1) {
+      return { kind:'collection', label:`${window.CAO_POEMS.poems.length} 首`, unit:'首', pieces:window.CAO_POEMS.poems.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`cao:${ch.number}` })) };
+    }
+    if (BOOKS.some(book=>book.id===id)) return { kind:'single', label:'一篇', unit:'篇', pieces:[] };
+    return { kind:'record', label:'单独记录', unit:'', pieces:[] };
+  }
+  function readDaysFor(key) {
+    let count=0;
+    Object.entries(state.days).forEach(([date, entry])=>{
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !entry || !Array.isArray(entry.readings)) return;
+      if (entry.readings.includes(key)) count+=1;
+    });
+    return count;
+  }
   function timeCard(report) {
     const {books,dist,clocks}=report;
     const center=centerMarkup(clocks.totalSeconds);
@@ -465,16 +485,43 @@
       const item=dist.items[index] || {ms:0,percentLabel:'—',merged:false};
       const swatch=item.ms<=0 ? ' is-empty' : '';
       const color=item.ms<=0 ? '' : (item.merged ? OTHER_COLOR : colorFor(book.id, books));
-      return `<li><button type="button" data-action="stats-book" data-book="${esc(book.id)}" aria-pressed="${book.id===statsBook}"><i class="swatch${swatch}" ${color?`style="background:${color}"`:''} aria-hidden="true"></i><span class="time-name">${esc(book.name)}${item.merged?'<small>图中并入其他</small>':''}</span><span class="time-dur">${TimeStats.formatSeconds(clocks.seconds[index]||0)}</span><span class="time-pct">${esc(item.percentLabel)}</span></button></li>`;
+      const profile=bookProfile(book.id);
+      const meta=[profile.label, item.merged?'并入其他':''].filter(Boolean).join(' · ');
+      return `<li><button type="button" data-action="open-book-stats" data-book="${esc(book.id)}" aria-label="查看${esc(book.name)}的统计，${esc(profile.label)}"><i class="swatch${swatch}" ${color?`style="background:${color}"`:''} aria-hidden="true"></i><span class="time-name"><b>${esc(book.name)}</b>${meta?`<small>${esc(meta)}</small>`:''}</span><span class="time-dur">${TimeStats.formatSeconds(clocks.seconds[index]||0)}</span><span class="time-pct">${esc(item.percentLabel)}</span><span class="time-go" aria-hidden="true">›</span></button></li>`;
     }).join('');
     const label=dist.empty ? `还没有读诵时长，总时间 ${TimeStats.formatSeconds(0)}` : `累计总时间 ${TimeStats.formatSeconds(clocks.totalSeconds)}，各书占比见下方列表`;
-    return `<section class="ds-card" id="time-dist"><div class="card-head"><h2>时间分布</h2><span>累计读诵</span></div><div class="donut" role="img" aria-label="${esc(label)}">${svg}${center}</div>${emptyNote}<ul class="time-list">${list}</ul>${note}</section>`;
+    const find=books.length>8 ? '<label class="book-find">查找<input id="book-find" type="search" placeholder="书名" aria-label="按书名查找" autocomplete="off"></label>' : '';
+    return `<section class="ds-card" id="time-dist"><div class="card-head"><h2>时间分布</h2><span>累计读诵</span></div><div class="donut" role="img" aria-label="${esc(label)}">${svg}${center}</div>${emptyNote}${find}<ul class="time-list">${list}</ul>${note}</section>`;
   }
   function renderStats(preserveInputs=false) {
     const report=timeReport();
-    const book=statsBook;
-    const bookMeta=report.books.find(item=>item.id===book) || report.books[0] || {id:book,name:book};
+    if (statsFocus && !report.books.some(book=>book.id===statsFocus)) statsFocus=null;
+    const html=statsFocus ? bookStatsHtml(report, statsFocus) : overviewHtml(report);
+    const root=document.getElementById('view-stats');
+    if (preserveInputs && statsFocus && root.querySelector('.record-editor')) {
+      const fresh=document.createElement('div'); fresh.innerHTML=html;
+      const swap=selector=>{const oldNode=root.querySelector(selector), newNode=fresh.querySelector(selector); if(oldNode&&newNode) oldNode.innerHTML=newNode.innerHTML;};
+      swap('#book-total'); swap('.streak-card'); swap('.trend-card');
+      const oldCells=root.querySelectorAll('.heat-cell'), newCells=fresh.querySelectorAll('.heat-cell');
+      oldCells.forEach((cell,i)=>{const next=newCells[i]; if(!next) return; cell.className=next.className; cell.setAttribute('aria-label',next.getAttribute('aria-label')); if(next.getAttribute('title')) cell.setAttribute('title',next.getAttribute('title'));});
+      const oldFocus=root.querySelector('#heat-focus'), newFocus=fresh.querySelector('#heat-focus');
+      if(oldFocus&&newFocus) oldFocus.textContent=newFocus.textContent;
+      return;
+    }
+    root.innerHTML=html;
+  }
+  function overviewHtml(report) {
+    const year=statsMonth.getFullYear(), month=statsMonth.getMonth();
+    const practiced=Object.keys(state.days).filter(date=>/^\d{4}-\d{2}-\d{2}$/.test(date) && report.books.some(item=>hasPractice(date,item.id))).length;
+    return `<header class="page-head"><span class="eyebrow">STATISTICS</span><h1 id="stats-title">修习统计</h1><p class="page-head-date">${year} 年 ${month+1} 月 · 累计 ${practiced} 天</p></header>${timeCard(report)}`;
+  }
+  function bookStatsHtml(report, book) {
+    const bookMeta=report.books.find(item=>item.id===book) || {id:book,name:book};
     const bookLabel=bookMeta.name || book;
+    const profile=bookProfile(book);
+    const known=BOOKS.find(item=>item.id===book);
+    const index=report.books.findIndex(item=>item.id===book);
+    const seconds=index>=0 ? report.clocks.seconds[index] : 0;
     const year=statsMonth.getFullYear(), month=statsMonth.getMonth();
     const monthPrefix=`${year}-${String(month+1).padStart(2,'0')}`;
     const all=Object.entries(state.days).filter(([date])=>/^\d{4}-\d{2}-\d{2}$/.test(date));
@@ -487,7 +534,6 @@
     const today=localDate();
     const metric=(label,obj,accent=false)=>`<div class="metric${accent?' is-today':''}"><span>${label}</span><b>${obj.count}<small>遍</small></b><em>${formatDuration(obj.ms)}</em></div>`;
     const trend=trendBars(book,7);
-    const practiced=all.filter(([date])=>report.books.some(item=>hasPractice(date,item.id))).length;
     const monthEnd=new Date(year,month+1,0,12);
     const endOffset=(monthEnd.getDay()+6)%7;
     const firstDay=new Date(monthEnd); firstDay.setDate(monthEnd.getDate()-endOffset-77);
@@ -498,39 +544,26 @@
       const label=`${formatCnDate(date)} · ${bookLabel} · ${v.n} 遍 · ${formatDuration(v.ms)}`;
       heat+=`<button type="button" class="heat-cell level-${level}${date===statsSelectedDate?' selected':''}${date===today?' is-today':''}" data-action="stats-day" data-date="${date}" aria-label="${esc(label)}" title="${esc(label)}" ${future?'disabled':''}></button>`;
     }
-    const recordRow=meta=>`<div class="record-row"><span>${esc(meta.name)}</span><label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="${esc(meta.id)}" value="${Number(selected[meta.countKey])||0}" aria-label="${esc(meta.name)}次数"><small>遍</small></label><input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="${esc(meta.id)}" value="${recordTime(TimeStats.finiteMs(selected.readingMs && selected.readingMs[meta.id]))}" aria-label="${esc(meta.name)}时长，时分秒"></div>`;
-    const options=report.books.map(item=>`<option value="${esc(item.id)}"${item.id===book?' selected':''}>${esc(item.name)}</option>`).join('');
     const focus=`已选 ${formatCnDate(statsSelectedDate)} · ${bookLabel} · ${dayValue(statsSelectedDate,book).n} 遍 · ${formatDuration(dayValue(statsSelectedDate,book).ms)}`;
-    const reportHtml=`<header class="page-head"><span class="eyebrow">STATISTICS</span><h1 id="stats-title">修习统计</h1><p class="page-head-date">${year} 年 ${month+1} 月 · 累计 ${practiced} 天</p></header>
-      ${timeCard(report)}
-      <div class="book-scope"><h2>单本统计</h2><label class="book-select"><span>选择</span><select id="stats-book-select" aria-label="选择一本书查看统计">${options}</select></label></div>
-      <section class="streak-card">
-        <div class="streak-top"><div class="streak-seal"><b>${streak}</b><span>连续日</span></div><div class="streak-copy"><h2>${esc(bookLabel)} · 连续 ${streak} 天</h2><p>最长的坚持 · 历史 ${best} 天</p></div></div>
-        <div class="metrics">${metric('今日',todayStats,true)}${metric(isCurrentMonth?'本月':'当月',monthStats)}${metric('累计',allStats)}</div>
-      </section>
-      <section class="ds-card">
-        <div class="card-head"><h2>修习热力</h2><div class="month-switch"><button type="button" data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button type="button" data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div>
-        <div class="heat-grid">${heat}</div>
-        <p id="heat-focus" class="heat-focus" aria-live="polite">${esc(focus)}</p>
-        <div class="heat-legend"><span>少</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><span>多</span></div>
-        <details class="record-editor"><summary><span>修改本日记录</span><span class="editor-meta">${statsSelectedDate} ›</span></summary><div class="record-fields">${BOOKS.map(recordRow).join('')}</div></details>
-      </section>
-      <section class="ds-card trend-card">
-        <div class="card-head"><h2>近 7 日 · ${esc(bookLabel)}</h2><span>共 ${trend.total} 遍</span></div>
-        <div class="trend-bars">${trend.bars}</div><div class="trend-week">${trend.labels}</div>
-      </section>`;
-    const root=document.getElementById('view-stats');
-    if (preserveInputs && root.querySelector('.record-editor')) {
-      const fresh=document.createElement('div'); fresh.innerHTML=reportHtml;
-      const swap=selector=>{const oldNode=root.querySelector(selector), newNode=fresh.querySelector(selector); if(oldNode&&newNode) oldNode.innerHTML=newNode.innerHTML;};
-      swap('#time-dist'); swap('.streak-card'); swap('.trend-card');
-      const oldCells=root.querySelectorAll('.heat-cell'), newCells=fresh.querySelectorAll('.heat-cell');
-      oldCells.forEach((cell,i)=>{const next=newCells[i]; if(!next) return; cell.className=next.className; cell.setAttribute('aria-label',next.getAttribute('aria-label')); if(next.getAttribute('title')) cell.setAttribute('title',next.getAttribute('title'));});
-      const oldFocus=root.querySelector('#heat-focus'), newFocus=fresh.querySelector('#heat-focus');
-      if(oldFocus&&newFocus) oldFocus.textContent=newFocus.textContent;
-      return;
-    }
-    root.innerHTML=reportHtml;
+    const countField=known ? `<label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="${esc(book)}" value="${Number(selected[known.countKey])||0}" aria-label="${esc(bookLabel)}次数"><small>遍</small></label>` : '';
+    const timeField=`<input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="${esc(book)}" value="${recordTime(TimeStats.finiteMs(selected.readingMs && selected.readingMs[book]))}" aria-label="${esc(bookLabel)}时长，时分秒">`;
+    const kindCopy=profile.kind==='collection'
+      ? `共 ${profile.pieces.length} ${profile.unit}。诵读遍数和时长记在整本书上，不拆到每一${profile.unit}。`
+      : profile.kind==='single'
+        ? '只有一篇。遍数和时长都是这一篇的。'
+        : '这是单独一条记录，没有篇目。';
+    const pieces=profile.kind==='collection' ? pieceListHtml(profile) : '';
+    return `<div class="book-stats" data-kind="${profile.kind}"><div class="stats-back-row"><button type="button" class="stats-back" data-action="close-book-stats" aria-label="返回时间分布">‹</button><div><span class="eyebrow">${profile.kind==='collection'?'多篇':profile.kind==='single'?'单篇':'记录'}</span><h1 id="stats-title">${esc(bookLabel)}</h1></div></div><p class="stats-kind">${kindCopy}</p><p class="book-total" id="book-total"><span>总时间</span><b>${TimeStats.formatSeconds(seconds)}</b></p><section class="streak-card"><div class="streak-top"><div class="streak-seal"><b>${streak}</b><span>连续日</span></div><div class="streak-copy"><h2>连续 ${streak} 天</h2><p>最长的坚持 · 历史 ${best} 天</p></div></div><div class="metrics">${metric('今日',todayStats,true)}${metric(isCurrentMonth?'本月':'当月',monthStats)}${metric('累计',allStats)}</div></section>${pieces}<section class="ds-card"><div class="card-head"><h2>修习热力</h2><div class="month-switch"><button type="button" data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button type="button" data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="heat-grid">${heat}</div><p id="heat-focus" class="heat-focus" aria-live="polite">${esc(focus)}</p><div class="heat-legend"><span>少</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><span>多</span></div><details class="record-editor"><summary><span>修改本日记录</span><span class="editor-meta">${statsSelectedDate} ›</span></summary><div class="record-fields"><div class="record-row"><span>${esc(bookLabel)}</span>${countField}${timeField}</div></div></details></section><section class="ds-card trend-card"><div class="card-head"><h2>近 7 日</h2><span>共 ${trend.total} 遍</span></div><div class="trend-bars">${trend.bars}</div><div class="trend-week">${trend.labels}</div></section></div>`;
+  }
+  function pieceListHtml(profile) {
+    const rows=profile.pieces.map(piece=>{
+      const days=readDaysFor(piece.key);
+      const title=profile.unit==='首' ? piece.title : (piece.open || piece.title);
+      const sub=profile.unit==='首' ? piece.open : '';
+      return `<li class="piece-row"><span class="piece-index">${esc(String(piece.number).padStart(2,'0'))}</span><span class="piece-copy"><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</span><span class="piece-stat">${days>0?`读过 ${days} 天`:'未读过'}</span></li>`;
+    }).join('');
+    const touched=profile.pieces.filter(piece=>readDaysFor(piece.key)>0).length;
+    return `<section class="ds-card piece-card"><div class="card-head"><h2>篇目</h2><span>读过 ${touched} / ${profile.pieces.length} ${profile.unit}</span></div><p class="piece-note">每一${profile.unit}只统计实际标记过的天数。历史时长没有按篇分开，这里不补成 0 秒。</p><ul class="piece-list">${rows}</ul></section>`;
   }
   function ensureFixtureBanner() {
     if (!fixtureMode || document.getElementById('fixture-banner')) return;
@@ -572,12 +605,26 @@
     }
     saveState(); renderToday(); renderStats(true);
   }
-  document.addEventListener('input',event=>{const input=event.target.closest('[data-inline-record]');if(input)updateInlineRecord(input,true);});
-  document.addEventListener('change',event=>{
-    const picker=event.target.closest('#stats-book-select');
-    if(picker) { if(TimeStats.isBookId(picker.value)) { statsBook=picker.value; renderStats(); } return; }
-    const input=event.target.closest('[data-inline-record]'); if(input) updateInlineRecord(input,false);
+  document.addEventListener('input',event=>{
+    const find=event.target.closest('#book-find');
+    if(find) {
+      const query=find.value.trim();
+      document.querySelectorAll('.time-list > li').forEach(item=>{
+        const name=item.querySelector('.time-name')?.innerText || '';
+        item.hidden=!!query && !name.includes(query);
+      });
+      const shown=[...document.querySelectorAll('.time-list > li')].filter(item=>!item.hidden).length;
+      let empty=document.querySelector('.book-find-empty');
+      if(!empty) {
+        empty=document.createElement('p'); empty.className='book-find-empty'; empty.textContent='没有这本书';
+        document.querySelector('.time-list')?.after(empty);
+      }
+      empty.hidden=shown!==0;
+      return;
+    }
+    const input=event.target.closest('[data-inline-record]'); if(input) updateInlineRecord(input,true);
   });
+  document.addEventListener('change',event=>{const input=event.target.closest('[data-inline-record]');if(input)updateInlineRecord(input,false);});
   document.addEventListener('click', event => {
     const routeButton=event.target.closest('[data-route]');
     if (routeButton) { routeTo(routeButton.dataset.route); return; }
@@ -600,7 +647,11 @@
       syncFontControls();
       return;
     }
-    if (action === 'stats-book') { if(TimeStats.isBookId(button.dataset.book)) { statsBook=button.dataset.book; renderStats(); } return; }
+    if (action === 'open-book-stats' || action === 'stats-book') {
+      if(!TimeStats.isBookId(button.dataset.book)) return;
+      statsFocus=button.dataset.book; statsBook=statsFocus; renderStats(); window.scrollTo(0,0); return;
+    }
+    if (action === 'close-book-stats') { statsFocus=null; renderStats(); window.scrollTo(0,0); return; }
     if (action === 'stats-day') { statsSelectedDate=button.dataset.date; renderStats(); return; }
     if (action === 'stats-prev-month' || action === 'stats-next-month') {
       const delta=action==='stats-prev-month'?-1:1; statsMonth=new Date(statsMonth.getFullYear(),statsMonth.getMonth()+delta,1);
