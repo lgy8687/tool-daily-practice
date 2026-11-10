@@ -821,8 +821,8 @@ ruby { ruby-align:center; ruby-position:over; -webkit-ruby-position:before; }
 .font-step b { min-width:16px; text-align:center; font-size:12px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--ink); }
 .recitation-screen .layout-toolbar button { min-width:28px; height:24px; font-size:13px; }
 .practice-card { position:relative; }
-.card-stats { position:absolute; top:6px; right:6px; z-index:2; width:28px; height:28px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ink-2); display:grid; place-items:center; cursor:pointer; }
-.card-stats svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.card-stats { position:absolute; top:10px; right:10px; z-index:2; width:32px; height:32px; padding:0; border:1px solid var(--line-strong); border-radius:10px; background:var(--green-soft); color:var(--green); display:grid; place-items:center; cursor:pointer; }
+.card-stats svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .card-stats:active { background:var(--paper-deep); }
 .recitation-screen .layout-toolbar { display:none; position:static; width:auto; max-width:none; margin:0; padding:0; border:0; background:transparent; }
 .recitation-screen.editing-layout .layout-toolbar { display:flex; }
