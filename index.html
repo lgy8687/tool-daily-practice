@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>日课 · 读诵与日常</title>
-  <link rel="stylesheet" href="styles.css?v=34">
+  <link rel="stylesheet" href="styles.css?v=35">
 </head>
 <body>
   <div class="app-shell">
@@ -45,13 +45,22 @@
     <p class="privacy-note">GitHub Pages 上的网页不接收你的打卡数据。</p>
   </dialog>
 
+  <dialog id="compose-dialog" class="settings-dialog">
+    <form method="dialog" class="dialog-top"><div><h2 id="compose-heading">添加</h2></div><button type="button" class="icon-button" id="compose-cancel" aria-label="关闭">×</button></form>
+    <div class="setting-group">
+      <label class="compose-label">标题<input id="compose-title" maxlength="40" autocomplete="off" placeholder="写一个标题"></label>
+      <label class="compose-label" id="compose-body-label">正文<textarea id="compose-text" maxlength="4000" placeholder="可以先空着"></textarea></label>
+      <button type="button" id="compose-save" class="button primary">保存</button>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="data/dao-de-jing.js?v=34"></script>
-  <script src="data/dao-pinyin.js?v=34"></script>
-  <script src="data/heart-pinyin.js?v=34"></script>
-  <script src="data/cao-pinyin.js?v=34"></script>
-  <script src="data/cao-poems.js?v=34"></script>
-  <script src="time-stats.js?v=34"></script>
-  <script src="app.js?v=34"></script>
+  <script src="data/dao-de-jing.js?v=35"></script>
+  <script src="data/dao-pinyin.js?v=35"></script>
+  <script src="data/heart-pinyin.js?v=35"></script>
+  <script src="data/cao-pinyin.js?v=35"></script>
+  <script src="data/cao-poems.js?v=35"></script>
+  <script src="time-stats.js?v=35"></script>
+  <script src="app.js?v=35"></script>
 </body>
 </html>
