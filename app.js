@@ -27,12 +27,14 @@
   let readingBook = 'dao';
   let reciteBook = null;
   let reciteChapter = 1;
-  const fontKey = () => reciteBook === 'heart' ? 'rikey.fontSize.heart' : reciteBook === 'cao' ? `rikey.fontSize.cao.${reciteChapter}` : `rikey.fontSize.dao.${reciteChapter}`;
+  const fontKey = () => reciteBook === 'heart' ? 'rikey.fontSize.heart' : isCustomBook(reciteBook) ? `rikey.fontSize.user.${reciteBook}.${reciteChapter}` : reciteBook === 'cao' ? `rikey.fontSize.cao.${reciteChapter}` : `rikey.fontSize.dao.${reciteChapter}`;
   const currentFontSize = () => Number(localStorage.getItem(fontKey())) || 18;
   let layoutEditing = false;
   let chapterNumber = 1;
   let statsBook = 'heart';
   let statsFocus = null;
+  let statsOrigin = 'stats';
+  let composeMode = null;
   let statsMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1);
   let statsSelectedDate = localDate();
   let toastTimer;
@@ -98,6 +100,62 @@
   }
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function dayRecord(item) { return item && typeof item === 'object' ? item : null; }
+  function userLibrary() {
+    if (!state.library || typeof state.library !== 'object') state.library = { pieces: {}, books: [] };
+    if (!state.library.pieces || typeof state.library.pieces !== 'object' || Array.isArray(state.library.pieces)) state.library.pieces = {};
+    if (!Array.isArray(state.library.books)) state.library.books = [];
+    if (!Array.isArray(state.library.pieces.cao)) state.library.pieces.cao = [];
+    return state.library;
+  }
+  function isCustomBook(id) { return userLibrary().books.some(book => book && book.id === id); }
+  function allBooks() {
+    const custom = userLibrary().books.filter(book => book && TimeStats.isBookId(String(book.id)) && String(book.title || '').trim()).map(book => ({
+      id: String(book.id),
+      name: String(book.title).trim(),
+      cardTitle: String(book.title).trim(),
+      countKey: null,
+      custom: true
+    }));
+    return BOOKS.concat(custom);
+  }
+  function bookCount(book, item) {
+    if (!book || !item) return 0;
+    if (book.custom) return Number(item.userCounts && item.userCounts[book.id]) || 0;
+    return Number(item[book.countKey]) || 0;
+  }
+  function setBookCount(book, item, value) {
+    if (book.custom) {
+      if (!item.userCounts || typeof item.userCounts !== 'object' || Array.isArray(item.userCounts)) item.userCounts = {};
+      item.userCounts[book.id] = value;
+    } else item[book.countKey] = value;
+  }
+  function piecesOf(bookId) {
+    if (bookId === 'dao' && window.DAO_DE_JING) return window.DAO_DE_JING.chapters;
+    if (bookId === 'cao' && window.CAO_POEMS) {
+      const base = window.CAO_POEMS.poems;
+      const extra = userLibrary().pieces.cao.filter(piece => piece && String(piece.title || '').trim()).map((piece, index) => ({
+        number: base.length + index + 1,
+        title: String(piece.title).trim(),
+        text: String(piece.text || ''),
+        meta: '自己添加',
+        translation: '',
+        note: '',
+        user: true
+      }));
+      return base.concat(extra);
+    }
+    const custom = userLibrary().books.find(book => book && book.id === bookId);
+    if (!custom) return [];
+    return (Array.isArray(custom.pieces) ? custom.pieces : []).filter(piece => piece && String(piece.title || '').trim()).map((piece, index) => ({
+      number: index + 1,
+      title: String(piece.title).trim(),
+      text: String(piece.text || ''),
+      meta: '自己添加',
+      translation: '',
+      note: '',
+      user: true
+    }));
+  }
   function sum(key) { return Object.values(state.days).reduce((total, item) => total + (Number(dayRecord(item)?.[key]) || 0), 0); }
   function todayLabel() { return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()); }
   let timerStart = Number(state.activeTimer?.startedAt) || null;
@@ -158,12 +216,12 @@
   /* ===== v4 视觉系统：数据工具（见 DESIGN.md） ===== */
   function dayValue(date, book) {
     const item = state.days[date] || blankDay();
-    const known = BOOKS.find(entry => entry.id === book);
+    const known = allBooks().find(entry => entry.id === book);
     const n = book === 'all'
-      ? ['xinCount','daoCount','caoCount'].reduce((total,key)=>total+(Number(item[key])||0),0)
-      : (known ? (Number(item[known.countKey]) || 0) : 0);
+      ? allBooks().reduce((total, entry) => total + bookCount(entry, item), 0)
+      : (known ? bookCount(known, item) : 0);
     const ms = book === 'all'
-      ? BOOKS.reduce((total, entry) => total + TimeStats.finiteMs(item.readingMs && item.readingMs[entry.id]), 0)
+      ? allBooks().reduce((total, entry) => total + TimeStats.finiteMs(item.readingMs && item.readingMs[entry.id]), 0)
       : TimeStats.finiteMs(item.readingMs && item.readingMs[book]);
     return { n, ms };
   }
@@ -207,9 +265,9 @@
   }
 
   function timeReport() {
-    const books = TimeStats.discoverBooks(state.days, BOOKS);
+    const books = TimeStats.discoverBooks(state.days, allBooks());
     const aggregated = TimeStats.aggregateBookTimes(state.days, books);
-    const catalogIds = new Set(BOOKS.map(book => book.id));
+    const catalogIds = new Set(allBooks().map(book => book.id));
     const rows = aggregated.filter(row => catalogIds.has(row.id)).concat(
       aggregated.filter(row => !catalogIds.has(row.id)).sort((a, b) => b.ms - a.ms || a.name.localeCompare(b.name, 'zh'))
     );
@@ -224,9 +282,12 @@
     const card = book => {
       const index = report.books.findIndex(item => item.id === book.id);
       const seconds = index >= 0 ? report.clocks.seconds[index] : 0;
-      return `<article class="practice-card"><button type="button" class="card-stats" data-action="open-book-stats" data-book="${book.id}" aria-label="查看${book.name}的统计"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M7.5 19.5v-6M12 19.5V8M16.5 19.5v-9"/></svg></button><button type="button" class="practice-open" data-action="open-recitation" data-book="${book.id}"><h2>${book.cardTitle}</h2><div class="practice-numbers"><span><b>${day()[book.countKey]}</b>今日（遍）</span><span><b>${sum(book.countKey)}</b>累计（遍）</span><span><b>${Object.values(state.days).filter(item => Number(dayRecord(item)?.[book.countKey]) > 0).length}</b>天数</span></div><div class="practice-time">总时间　${TimeStats.formatSeconds(seconds)}</div></button></article>`;
+      const todayCount = bookCount(book, day());
+      const totalCount = Object.values(state.days).reduce((total, item) => total + bookCount(book, dayRecord(item)), 0);
+      const days = Object.values(state.days).filter(item => bookCount(book, dayRecord(item)) > 0).length;
+      return `<article class="practice-card"><button type="button" class="card-stats" data-action="open-book-stats" data-book="${book.id}" aria-label="查看${book.name}的统计"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M7.5 19.5v-6M12 19.5V8M16.5 19.5v-9"/></svg></button><button type="button" class="practice-open" data-action="open-recitation" data-book="${book.id}"><h2>${book.cardTitle}</h2><div class="practice-numbers"><span><b>${todayCount}</b>今日（遍）</span><span><b>${totalCount}</b>累计（遍）</span><span><b>${days}</b>天数</span></div><div class="practice-time">总时间　${TimeStats.formatSeconds(seconds)}</div></button></article>`;
     };
-    document.getElementById('view-today').innerHTML = BOOKS.map(card).join('');
+    document.getElementById('view-today').innerHTML = allBooks().map(card).join('') + `<button type="button" class="add-card" data-action="add-card">添加卡片</button>`;
   }
   function daoReader() {
     const chapter = window.DAO_DE_JING.chapters[chapterNumber - 1];
@@ -241,12 +302,13 @@
   function renderRead() {
     document.getElementById('view-read').innerHTML = `<div class="page-intro"><h1 id="read-title">读经典</h1></div><div class="switcher"><button class="pill ${readingBook === 'dao' ? 'active' : ''}" data-action="book" data-book="dao">《道德经》</button><button class="pill ${readingBook === 'heart' ? 'active' : ''}" data-action="book" data-book="heart">《心经》</button></div><div class="reader-tools"><button class="pinyin-toggle ${pinyinOn()?'on':''}" data-action="toggle-pinyin" aria-pressed="${pinyinOn()}">拼音标注 · ${pinyinOn()?'开':'关'}</button></div>${readingBook === 'dao' ? daoReader() : heartReader()}<p class="source-note">《道德经》王弼本，简体转换；注释为白话导读。<br>《心经》玄奘译本。<br><a href="https://zh.wikisource.org/zh-hans/道德经_(王弼本)" target="_blank" rel="noreferrer">原文来源</a> · <a href="https://zh.wikisource.org/zh-hans/般若波罗蜜多心经_(玄奘)" target="_blank" rel="noreferrer">心经来源</a></p>`;
   }
-  function layoutBaseKey() { return reciteBook === 'heart' ? 'heart' : reciteBook === 'cao' ? `cao:${reciteChapter}` : `dao:${reciteChapter}`; }
+  function layoutBaseKey() { return reciteBook === 'heart' ? 'heart' : isCustomBook(reciteBook) ? `user:${reciteBook}:${reciteChapter}` : reciteBook === 'cao' ? `cao:${reciteChapter}` : `dao:${reciteChapter}`; }
   /* v27 起拼音标注对三课统一生效；兼容旧版只用于道德经的开关 key */
   const PINYIN_KEY = 'rikey.pinyin.all';
   const LEGACY_PINYIN_KEY = 'rikey.pinyin.dao';
   const pinyinOn = () => (localStorage.getItem(PINYIN_KEY) ?? localStorage.getItem(LEGACY_PINYIN_KEY) ?? '1') !== '0';
   function pinyinTable() {
+    if (isCustomBook(reciteBook)) return null;
     return reciteBook === 'heart' ? window.HEART_PINYIN
          : reciteBook === 'cao' ? window.CAO_PINYIN
          : window.DAO_PINYIN;
@@ -344,17 +406,34 @@
     const piece=flat.split(/[。！？；]/)[0] || flat;
     return piece.length>18 ? `${piece.slice(0,18)}…` : piece;
   }
-  function chapterDialog(isCao) {
-    const items=isCao ? window.CAO_POEMS.poems : window.DAO_DE_JING.chapters;
-    const unit=isCao ? '首' : '章';
+  function chapterDialog(bookId) {
+    const isDao=bookId==='dao';
+    const items=piecesOf(bookId);
+    const unit=isDao ? '章' : '首';
+    const showTitle=!isDao;
     const tiles=items.map(item=>{
       const open=openingLine(item.text);
       const selected=item.number===reciteChapter;
-      const title=isCao ? item.title : '';
+      const title=showTitle ? item.title : '';
       const label=[`第${item.number}${unit}`, title, open].filter(Boolean).join('，');
       return `<button type="button" class="chapter-tile${selected?' selected':''}" data-action="choose-chapter" data-number="${item.number}" aria-label="${esc(label)}" aria-current="${selected?'true':'false'}"><span class="chapter-index">${esc(String(item.number).padStart(2,'0'))}</span><span class="chapter-copy">${title?`<span class="chapter-name">${esc(title)}</span>`:''}<span class="chapter-open">${esc(open || '（这篇没有正文）')}</span></span></button>`;
     }).join('');
-    return `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="${isCao?'选择篇目':'选择章节'}"><div class="chapter-dialog-head"><h2>${isCao?'选择篇目':'选择章节'}</h2><button type="button" data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${tiles}</div></dialog>`;
+    const add=(bookId==='cao' || isCustomBook(bookId)) ? `<button type="button" class="chapter-add" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button>` : '';
+    const heading=isDao ? '选择章节' : '选择篇目';
+    return `<dialog class="chapter-dialog" id="chapter-dialog" aria-label="${heading}"><div class="chapter-dialog-head"><h2>${heading}</h2><button type="button" data-action="close-chapters" aria-label="关闭">×</button></div><div class="chapter-grid">${tiles}${add}</div></dialog>`;
+  }
+  function collectionContent(bookId) {
+    const pieces=piecesOf(bookId);
+    if(!pieces.length) return `<div class="empty-piece"><p>还没有内容</p><button type="button" class="add-piece" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button></div>`;
+    if(reciteChapter>pieces.length) reciteChapter=pieces.length;
+    if(reciteChapter<1) reciteChapter=1;
+    const piece=pieces[reciteChapter-1];
+    const isDao=bookId==='dao';
+    const position=isDao ? `第 ${piece.number} 章` : `第 ${piece.number} 首 · ${esc(piece.title)}`;
+    const guide=isDao ? `<p>${esc(piece.note||'')}</p>` : `<p>${esc(piece.note || (piece.user ? '这是你添加的一篇。' : ''))}</p>${bookId==='cao' && !piece.user ? `<p class="muted">${esc(window.CAO_POEMS.edition)}</p>` : ''}`;
+    const noteTitle=isDao ? '本章导读' : '本篇导读';
+    const add=(bookId==='cao' || isCustomBook(bookId)) ? `<button type="button" class="add-piece inline-add" data-action="add-piece" data-book="${esc(bookId)}">添加一篇</button>` : '';
+    return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">${position}</button>${piece.meta?`<div class="reading-meta">${esc(piece.meta)}</div>`:''}<div class="classic-text recitation-text">${layoutBlock("original", piece.text || '')}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation", piece.translation || '', "translation-layout")}</details><details class="annotation-fold"><summary>${noteTitle}</summary>${guide}</details>${add}</div>`;
   }
   function reciteChrome(name) {
     return `<div class="recite-header"><div class="recite-title-row"><button type="button" class="back-button" data-action="back-recitation" aria-label="返回">‹</button><h1 id="recite-title">${name}</h1></div><div class="reading-timer" id="reading-timer">今日 ${formatDuration(todayReadingMs(reciteBook))}</div></div>`;
@@ -371,8 +450,8 @@
         <div class="counter-head"><i class="live-dot"></i><span>诵读中</span><span class="counter-hint">轻点任意处记一遍</span><button class="undo-button" data-action="undo" data-key="${countKey}" aria-label="撤销一遍" title="撤销一遍">↶ 撤销</button></div>
         <button class="count-tap" data-action="count" data-key="${countKey}" aria-label="轻点记一遍">
           <span class="tap-ring"></span>
-          <span class="tap-main"><b class="tap-number" id="recite-today-count">${day()[countKey]}</b><span class="tap-unit">遍</span></span>
-          <span class="tap-total" id="recite-total-count">累计 ${sum(countKey)}</span>
+          <span class="tap-main"><b class="tap-number" id="recite-today-count">${bookCount(allBooks().find(entry=>entry.id===reciteBook), day())}</b><span class="tap-unit">遍</span></span>
+          <span class="tap-total" id="recite-total-count">累计 ${bookTotalCount(reciteBook)}</span>
           <span class="tap-pop">＋1</span>
         </button>
       </div>`;
@@ -388,34 +467,47 @@
     }
     shell.classList.add('immersive');
     const isHeart=reciteBook==='heart';
-    const isCao=reciteBook==='cao';
-    const bookName=isHeart?'《心经》':isCao?'曹操的诗':'《道德经》';
-    const countKey=isHeart?'xinCount':isCao?'caoCount':'daoCount';
-    const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : isCao ? (()=>{const p=window.CAO_POEMS.poems[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 首 · ${esc(p.title)}</button><div class="reading-meta">${esc(p.meta)}</div><div class="classic-text recitation-text">${layoutBlock("original",p.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation",p.translation,"translation-layout")}</details><details class="annotation-fold"><summary>本篇导读</summary><p>${esc(p.note)}</p><p class="muted">${esc(window.CAO_POEMS.edition)}</p></details></div>`;})() : (()=>{const c=window.DAO_DE_JING.chapters[reciteChapter-1];return `<div class="dao-swipe" id="dao-swipe"><button class="chapter-position chapter-select-trigger" data-action="open-chapters">第 ${reciteChapter} 章</button><div class="classic-text recitation-text">${layoutBlock("original",c.text)}</div><details class="annotation-fold dao-translation" ${(localStorage.getItem("rikey.daoTranslationOpen") ?? localStorage.getItem("rikey.daoNoteOpen"))==="1"?"open":""}><summary>白话翻译</summary>${layoutBlock("translation",c.translation,"translation-layout")}</details><details class="annotation-fold"><summary>本章导读</summary><p>${esc(c.note)}</p></details></div>`;})();
+    const customBook=allBooks().find(entry=>entry.id===reciteBook && entry.custom);
+    const bookName=isHeart?'《心经》':customBook?customBook.cardTitle:reciteBook==='cao'?'曹操的诗':'《道德经》';
+    const countKey=isHeart?'xinCount':reciteBook==='cao'?'caoCount':reciteBook==='dao'?'daoCount':'user';
+    const content=isHeart ? `<div class="classic-text recitation-text">${layoutBlock("original",HEART.map(segment=>segment.text).join("\n"))}</div><details class="annotation-fold"><summary>白话翻译</summary>${layoutBlock("translation",HEART_TRANSLATION,"translation-layout")}</details><details class="annotation-fold recitation-annotation"><summary>心经注释</summary><div class="annotation-list">${HEART.map(segment=>`<p><b>${esc(segment.title)}</b><br>${esc(segment.note)}</p>`).join('')}</div></details>` : collectionContent(reciteBook);
     layoutEditing=false;
-    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px">${reciteChrome(bookName)}${content}${isHeart ? '' : chapterDialog(isCao)}<div class="recite-footer">${readDock()}<div class="recite-actions">${reciteFooter(countKey)}</div></div></div>`;
+    node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px">${reciteChrome(bookName)}${content}${isHeart ? '' : chapterDialog(reciteBook)}<div class="recite-footer">${readDock()}<div class="recite-actions">${reciteFooter(countKey)}</div></div></div>`;
     syncFontControls();
   }
   let turningChapter = false;
   async function turnChapter(next) {
-    const maxChapter = reciteBook === 'cao' ? window.CAO_POEMS.poems.length : 81;
+    const maxChapter = piecesOf(reciteBook).length;
     if (turningChapter || next < 1 || next > maxChapter || next === reciteChapter) return;
     turningChapter = true;
     const direction = next > reciteChapter ? 1 : -1;
     const old = document.getElementById('dao-swipe');
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (old && !reduced) await old.animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:`translateX(${-direction*24}px)`}],{duration:130,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{});
-    if ((reciteBook !== 'dao' && reciteBook !== 'cao') || route !== 'recite') { turningChapter=false; return; }
+    if ((!piecesOf(reciteBook).length) || route !== 'recite') { turningChapter=false; return; }
     layoutEditing=false; reciteChapter = next; renderRecite(); window.scrollTo(0,0);
     const current=document.getElementById('dao-swipe');
     if (current && !reduced) await current.animate([{opacity:0,transform:`translateX(${direction*24}px)`},{opacity:1,transform:'translateX(0)'}],{duration:200,easing:'ease-out'}).finished.catch(()=>{});
     turningChapter=false;
   }
-  function updateReciteProgress(key) {
+  function changeBookCount(bookId, delta) {
+    const book=allBooks().find(entry=>entry.id===bookId); if(!book) return false;
+    const item=day();
+    const next=Math.max(0, bookCount(book, item)+delta);
+    if(next===bookCount(book, item)) return false;
+    setBookCount(book, item, next);
+    return true;
+  }
+  function bookTotalCount(bookId) {
+    const book=allBooks().find(entry=>entry.id===bookId); if(!book) return 0;
+    return Object.values(state.days).reduce((total, item)=>total+bookCount(book, dayRecord(item)), 0);
+  }
+  function updateReciteProgress() {
+    const book=allBooks().find(entry=>entry.id===reciteBook); if(!book) return;
     const todayCount=document.getElementById('recite-today-count');
     const total=document.getElementById('recite-total-count');
-    if(todayCount) { todayCount.textContent=String(day()[key]); todayCount.classList.remove('bump'); void todayCount.offsetWidth; todayCount.classList.add('bump'); }
-    if(total) total.textContent=`累计 ${sum(key)}`;
+    if(todayCount) { todayCount.textContent=String(bookCount(book, day())); todayCount.classList.remove('bump'); void todayCount.offsetWidth; todayCount.classList.add('bump'); }
+    if(total) total.textContent=`累计 ${bookTotalCount(reciteBook)}`;
   }
   function lastDays(n) {
     const items=[]; const now=new Date(); now.setHours(12,0,0,0);
@@ -462,8 +554,13 @@
     if (id==='dao' && window.DAO_DE_JING && Array.isArray(window.DAO_DE_JING.chapters) && window.DAO_DE_JING.chapters.length>1) {
       return { kind:'collection', label:`${window.DAO_DE_JING.chapters.length} 章`, unit:'章', pieces:window.DAO_DE_JING.chapters.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`dao:${ch.number}` })) };
     }
-    if (id==='cao' && window.CAO_POEMS && Array.isArray(window.CAO_POEMS.poems) && window.CAO_POEMS.poems.length>1) {
-      return { kind:'collection', label:`${window.CAO_POEMS.poems.length} 首`, unit:'首', pieces:window.CAO_POEMS.poems.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`cao:${ch.number}` })) };
+    if (id==='cao') {
+      const pieces=piecesOf('cao');
+      return { kind:'collection', label:`${pieces.length} 首`, unit:'首', pieces:pieces.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`cao:${ch.number}` })) };
+    }
+    if (isCustomBook(id)) {
+      const pieces=piecesOf(id);
+      return { kind:'collection', label:pieces.length?`${pieces.length} 篇`:'空', unit:'篇', pieces:pieces.map(ch=>({ number:ch.number, title:ch.title, open:openingLine(ch.text), key:`${id}:${ch.number}` })) };
     }
     if (BOOKS.some(book=>book.id===id)) return { kind:'single', label:'一篇', unit:'篇', pieces:[] };
     return { kind:'record', label:'单独记录', unit:'', pieces:[] };
@@ -522,7 +619,7 @@
     const bookMeta=report.books.find(item=>item.id===book) || {id:book,name:book};
     const bookLabel=bookMeta.name || book;
     const profile=bookProfile(book);
-    const known=BOOKS.find(item=>item.id===book);
+    const known=allBooks().find(item=>item.id===book);
     const index=report.books.findIndex(item=>item.id===book);
     const seconds=index>=0 ? report.clocks.seconds[index] : 0;
     const year=statsMonth.getFullYear(), month=statsMonth.getMonth();
@@ -548,7 +645,8 @@
       heat+=`<button type="button" class="heat-cell level-${level}${date===statsSelectedDate?' selected':''}${date===today?' is-today':''}" data-action="stats-day" data-date="${date}" aria-label="${esc(label)}" title="${esc(label)}" ${future?'disabled':''}></button>`;
     }
     const focus=`已选 ${formatCnDate(statsSelectedDate)} · ${bookLabel} · ${dayValue(statsSelectedDate,book).n} 遍 · ${formatDuration(dayValue(statsSelectedDate,book).ms)}`;
-    const countField=known ? `<label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="${esc(book)}" value="${Number(selected[known.countKey])||0}" aria-label="${esc(bookLabel)}次数"><small>遍</small></label>` : '';
+    const countValue=known ? bookCount(known, selected) : 0;
+    const countField=known ? `<label><input class="inline-count" type="number" min="0" max="100000" step="1" inputmode="numeric" required data-inline-record="count" data-book="${esc(book)}" value="${countValue}" aria-label="${esc(bookLabel)}次数"><small>遍</small></label>` : '';
     const timeField=`<input class="inline-time" type="text" maxlength="12" pattern="[0-9]+:[0-5][0-9]:[0-5][0-9]" required data-inline-record="time" data-book="${esc(book)}" value="${recordTime(TimeStats.finiteMs(selected.readingMs && selected.readingMs[book]))}" aria-label="${esc(bookLabel)}时长，时分秒">`;
     const kindCopy=profile.kind==='collection'
       ? `共 ${profile.pieces.length} ${profile.unit}。诵读遍数和时长记在整本书上，不拆到每一${profile.unit}。`
@@ -556,7 +654,7 @@
         ? '只有一篇。遍数和时长都是这一篇的。'
         : '这是单独一条记录，没有篇目。';
     const pieces=profile.kind==='collection' ? pieceListHtml(profile) : '';
-    return `<div class="book-stats" data-kind="${profile.kind}"><div class="stats-back-row"><button type="button" class="stats-back" data-action="close-book-stats" aria-label="返回时间分布">‹</button><div><span class="eyebrow">${profile.kind==='collection'?'多篇':profile.kind==='single'?'单篇':'记录'}</span><h1 id="stats-title">${esc(bookLabel)}</h1></div></div><p class="stats-kind">${kindCopy}</p><p class="book-total" id="book-total"><span>总时间</span><b>${TimeStats.formatSeconds(seconds)}</b></p><section class="streak-card"><div class="streak-top"><div class="streak-seal"><b>${streak}</b><span>连续日</span></div><div class="streak-copy"><h2>连续 ${streak} 天</h2><p>最长的坚持 · 历史 ${best} 天</p></div></div><div class="metrics">${metric('今日',todayStats,true)}${metric(isCurrentMonth?'本月':'当月',monthStats)}${metric('累计',allStats)}</div></section>${pieces}<section class="ds-card"><div class="card-head"><h2>修习热力</h2><div class="month-switch"><button type="button" data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button type="button" data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="heat-grid">${heat}</div><p id="heat-focus" class="heat-focus" aria-live="polite">${esc(focus)}</p><div class="heat-legend"><span>少</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><span>多</span></div><details class="record-editor"><summary><span>修改本日记录</span><span class="editor-meta">${statsSelectedDate} ›</span></summary><div class="record-fields"><div class="record-row"><span>${esc(bookLabel)}</span>${countField}${timeField}</div></div></details></section><section class="ds-card trend-card"><div class="card-head"><h2>近 7 日</h2><span>共 ${trend.total} 遍</span></div><div class="trend-bars">${trend.bars}</div><div class="trend-week">${trend.labels}</div></section></div>`;
+    return `<div class="book-stats" data-kind="${profile.kind}"><div class="stats-back-row"><button type="button" class="stats-back" data-action="close-book-stats" aria-label="${statsOrigin==='today'?'返回首页':'返回时间分布'}">‹</button><div><span class="eyebrow">${profile.kind==='collection'?'多篇':profile.kind==='single'?'单篇':'记录'}</span><h1 id="stats-title">${esc(bookLabel)}</h1></div></div><p class="stats-kind">${kindCopy}</p><p class="book-total" id="book-total"><span>总时间</span><b>${TimeStats.formatSeconds(seconds)}</b></p><section class="streak-card"><div class="streak-top"><div class="streak-seal"><b>${streak}</b><span>连续日</span></div><div class="streak-copy"><h2>连续 ${streak} 天</h2><p>最长的坚持 · 历史 ${best} 天</p></div></div><div class="metrics">${metric('今日',todayStats,true)}${metric(isCurrentMonth?'本月':'当月',monthStats)}${metric('累计',allStats)}</div></section>${pieces}<section class="ds-card"><div class="card-head"><h2>修习热力</h2><div class="month-switch"><button type="button" data-action="stats-prev-month" aria-label="上个月">‹</button><b>${year} 年 ${month+1} 月</b><button type="button" data-action="stats-next-month" aria-label="下个月" ${isCurrentMonth?'disabled':''}>›</button></div></div><div class="heat-grid">${heat}</div><p id="heat-focus" class="heat-focus" aria-live="polite">${esc(focus)}</p><div class="heat-legend"><span>少</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><span>多</span></div><details class="record-editor"><summary><span>修改本日记录</span><span class="editor-meta">${statsSelectedDate} ›</span></summary><div class="record-fields"><div class="record-row"><span>${esc(bookLabel)}</span>${countField}${timeField}</div></div></details></section><section class="ds-card trend-card"><div class="card-head"><h2>近 7 日</h2><span>共 ${trend.total} 遍</span></div><div class="trend-bars">${trend.bars}</div><div class="trend-week">${trend.labels}</div></section></div>`;
   }
   function pieceListHtml(profile) {
     const rows=profile.pieces.map(piece=>{
@@ -584,7 +682,7 @@
     const seconds=Math.floor((Number(ms)||0)/1000);
     return `${String(Math.floor(seconds/3600)).padStart(2,'0')}:${String(Math.floor(seconds%3600/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
   }
-  function countKeyFor(book) { return BOOKS.find(entry=>entry.id===book)?.countKey || ''; }
+  function countKeyFor(book) { const found=allBooks().find(entry=>entry.id===book); return found && !found.custom ? found.countKey || '' : ''; }
   function updateInlineRecord(input,live) {
     const book=input.dataset.book, kind=input.dataset.inlineRecord, key=countKeyFor(book);
     const existing=state.days[statsSelectedDate] || blankDay();
@@ -593,10 +691,10 @@
       return;
     }
     if(kind==='count') {
-      if(!key) return;
-      const value=Number(input.value); if(!Number.isInteger(value) || value<0 || value>100000) { if(!live) input.value=String(Number(existing[key])||0); return; }
-      if(value===(Number(existing[key])||0)) return;
-      day(statsSelectedDate)[key]=value;
+      const found=allBooks().find(entry=>entry.id===book);
+      const value=Number(input.value); if(!Number.isInteger(value) || value<0 || value>100000) { if(!live && found) input.value=String(bookCount(found, existing)); return; }
+      if(!found || value===bookCount(found, existing)) return;
+      setBookCount(found, day(statsSelectedDate), value);
     } else {
       const current=TimeStats.finiteMs(existing.readingMs && existing.readingMs[book]);
       if(input.value===recordTime(current)) return;
@@ -652,11 +750,23 @@
     }
     if (action === 'open-book-stats' || action === 'stats-book') {
       if(!TimeStats.isBookId(button.dataset.book)) return;
+      statsOrigin = route==='today' ? 'today' : 'stats';
       statsFocus=button.dataset.book; statsBook=statsFocus;
       if (route==='stats') { renderStats(); window.scrollTo(0,0); return; }
       routeTo('stats', true); return;
     }
-    if (action === 'close-book-stats') { statsFocus=null; renderStats(); window.scrollTo(0,0); return; }
+    if (action === 'close-book-stats') {
+      const backHome=statsOrigin==='today';
+      statsFocus=null;
+      if (backHome) { routeTo('today'); return; }
+      renderStats(); window.scrollTo(0,0); return;
+    }
+    if (action === 'add-card') { openCompose('card'); return; }
+    if (action === 'add-piece') {
+      const chapterDialogNode=document.getElementById('chapter-dialog');
+      if (chapterDialogNode && chapterDialogNode.open) chapterDialogNode.close();
+      openCompose('piece', button.dataset.book || reciteBook); return;
+    }
     if (action === 'stats-day') { statsSelectedDate=button.dataset.date; renderStats(); return; }
     if (action === 'stats-prev-month' || action === 'stats-next-month') {
       const delta=action==='stats-prev-month'?-1:1; statsMonth=new Date(statsMonth.getFullYear(),statsMonth.getMonth()+delta,1);
@@ -692,10 +802,13 @@
       saveState(); render();
     }
     if (action === 'count') {
-      const key=button.dataset.key; day()[key]++; saveState(); if (navigator.vibrate) navigator.vibrate(12);
-      if (route==='recite' && reciteBook) updateReciteProgress(key); else render();
+      if (route==='recite' && reciteBook) { changeBookCount(reciteBook, 1); saveState(); if (navigator.vibrate) navigator.vibrate(12); updateReciteProgress(); return; }
+      const key=button.dataset.key; day()[key]++; saveState(); render();
     }
-    if (action === 'undo') { const item=day(); const key=button.dataset.key; if(item[key]>0){item[key]--;saveState();if(route==='recite'&&reciteBook)updateReciteProgress(key);else render();showToast('已撤销一次');} }
+    if (action === 'undo') {
+      if (route==='recite' && reciteBook) { if(changeBookCount(reciteBook, -1)) { saveState(); updateReciteProgress(); showToast('已撤销一次'); } return; }
+      const item=day(); const key=button.dataset.key; if(item[key]>0){item[key]--;saveState();render();showToast('已撤销一次');}
+    }
     if (action === 'movie') { day().movieViews++; saveState(); render(); showToast('已记录：电影看完一遍'); }
     if (action === 'add-activity') {
       const titleInput=document.getElementById('activity-title'); const minutesInput=document.getElementById('activity-minutes');
@@ -712,7 +825,49 @@
   document.addEventListener('toggle',event=>{if(event.target.matches('.dao-translation')) localStorage.setItem('rikey.daoTranslationOpen',event.target.open?'1':'0');},true);
   let touchStart=null;
   document.addEventListener('touchstart',e=>{if(!layoutEditing && e.target.closest('#dao-swipe')) touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
-  document.addEventListener('touchend',e=>{if(!touchStart||!e.target.closest('#dao-swipe'))return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){const next=reciteChapter+(dx<0?1:-1);const maxChapter=reciteBook==='cao'?window.CAO_POEMS.poems.length:81;if(next>=1&&next<=maxChapter)turnChapter(next);}},{passive:true});
+  document.addEventListener('touchend',e=>{if(!touchStart||!e.target.closest('#dao-swipe'))return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){const next=reciteChapter+(dx<0?1:-1);const maxChapter=piecesOf(reciteBook).length;if(next>=1&&next<=maxChapter)turnChapter(next);}},{passive:true});
+  function openCompose(mode, bookId) {
+    composeMode={mode, bookId: bookId || null};
+    const dialog=document.getElementById('compose-dialog');
+    document.getElementById('compose-heading').textContent=mode==='card'?'添加卡片':'添加一篇';
+    document.getElementById('compose-body-label').hidden=mode==='card';
+    document.getElementById('compose-title').value='';
+    document.getElementById('compose-text').value='';
+    dialog.showModal();
+    document.getElementById('compose-title').focus();
+  }
+  function saveCompose() {
+    const title=document.getElementById('compose-title').value.trim();
+    const text=document.getElementById('compose-text').value.trim();
+    if(!title) { showToast('先写标题'); document.getElementById('compose-title').focus(); return; }
+    if(title.length>40) { showToast('标题请少于 40 字'); return; }
+    if(text.length>4000) { showToast('正文太长了'); return; }
+    const lib=userLibrary();
+    if(composeMode && composeMode.mode==='card') {
+      const id='u'+Date.now().toString(36);
+      lib.books.push({id, title, pieces:[]});
+      saveState();
+      document.getElementById('compose-dialog').close();
+      render();
+      showToast('已添加卡片');
+      return;
+    }
+    const bookId=composeMode && composeMode.bookId;
+    if(bookId==='cao') lib.pieces.cao.push({id:'p'+Date.now().toString(36), title, text});
+    else {
+      const book=lib.books.find(item=>item.id===bookId);
+      if(!book) { showToast('没有找到这张卡片'); return; }
+      if(!Array.isArray(book.pieces)) book.pieces=[];
+      book.pieces.push({id:'p'+Date.now().toString(36), title, text});
+    }
+    saveState();
+    document.getElementById('compose-dialog').close();
+    if(route==='recite' && reciteBook===bookId) { reciteChapter=Math.max(1, piecesOf(bookId).length); renderRecite(); }
+    else render();
+    showToast('已添加一篇');
+  }
+  document.getElementById('compose-save').addEventListener('click', saveCompose);
+  document.getElementById('compose-cancel').addEventListener('click', ()=>document.getElementById('compose-dialog').close());
   document.getElementById('open-settings').addEventListener('click',()=>{
     document.getElementById('settings-dialog').showModal();
   });

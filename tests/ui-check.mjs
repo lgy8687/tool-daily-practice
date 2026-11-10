@@ -116,8 +116,9 @@ try {
   await emptyPhone.page.waitForSelector('#view-stats.active [data-kind="collection"]');
   const fromCard = await emptyPhone.page.$eval('#stats-title', node => node.textContent);
   assert(fromCard.includes('道德经'), `卡面统计应进入这本书：${fromCard}`);
-  await emptyPhone.page.click('[data-route="today"]');
+  await emptyPhone.page.click('[data-action="close-book-stats"]');
   await emptyPhone.page.waitForSelector('#view-today.active .practice-card');
+  assert(!(await emptyPhone.page.$('#view-stats.active')), '从卡片进入统计后，返回应回到首页');
 
   await emptyPhone.page.click('[data-route="stats"]');
   await emptyPhone.page.waitForSelector('#time-dist .donut');
