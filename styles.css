@@ -897,3 +897,43 @@ ruby { ruby-align:center; ruby-position:over; -webkit-ruby-position:before; }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   .app-shell .bottom-nav { background:rgba(245,247,242,.94); }
 }
+
+/* v38 · 背诵页：清晰标题、舒展纸卡与可单手操作的计数区。 */
+.app-shell.immersive { padding-bottom:calc(var(--recite-dock-height, 208px) + 24px); }
+.recitation-screen .recite-header { padding:8px 0 12px; margin-bottom:16px; }
+.recitation-screen .recite-title-row { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; min-height:52px; padding-bottom:8px; }
+.recitation-screen .recite-title-row h1 { position:static; transform:none; min-width:0; margin:0; font:500 21px/1.4 var(--font-classic); text-align:center; white-space:normal; overflow-wrap:anywhere; }
+.recitation-screen .timer-row { min-height:32px; margin-top:8px; }
+.recitation-screen .reading-timer { font-size:14px; font-variant-numeric:tabular-nums; }
+.recitation-screen .add-piece-link { min-height:44px; padding:8px; font-size:14px; }
+.recitation-screen .chapter-select-trigger { display:block; width:100%; min-height:48px; margin:0 0 14px; padding:10px 14px; border:1px solid var(--line-strong); border-radius:12px; background:var(--green-soft); color:var(--green); font:500 15px/1.5 var(--font-classic); overflow-wrap:anywhere; }
+.recitation-screen .recitation-text { padding:22px 20px; border-color:var(--line-strong); border-radius:16px; line-height:1.9; overflow-wrap:anywhere; }
+.recitation-screen .layout-content.with-pinyin { line-height:1.8; }
+.recitation-screen .annotation-fold { margin-top:16px; }
+.recitation-screen .annotation-fold summary { min-height:48px; padding:12px 0; color:var(--ink-2); }
+.recitation-screen .recite-footer { gap:8px; padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px)); background:var(--card); }
+.recitation-screen .read-tools { justify-content:space-between; gap:8px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.recitation-screen .read-tools .pinyin-button,.recitation-screen .read-tools .settings-edit,.recitation-screen .font-step button,.recitation-screen .layout-toolbar button { min-width:44px; min-height:44px; height:auto; padding:8px; font-size:14px; border-radius:10px; }
+.recitation-screen .read-tools .pinyin-button,.recitation-screen .read-tools .settings-edit { border:1px solid var(--line); background:var(--paper); }
+.recitation-screen .read-tools .pinyin-button.on { border-color:var(--cinnabar-line); background:var(--cinnabar-soft); }
+.recitation-screen .font-step { gap:4px; margin:0; }
+.recitation-screen .font-step b { min-width:24px; font-size:14px; }
+.recitation-screen .counter-head { height:auto; min-height:44px; margin:0 0 6px; font-size:13px; gap:8px; }
+.recitation-screen .counter-hint { font-size:12px; }
+.recitation-screen .counter-head .undo-button { min-width:64px; height:44px; color:var(--ink-2); font-size:13px; }
+.recitation-screen .count-tap { min-height:96px; gap:3px; border-radius:14px; }
+.recitation-screen .tap-caption { color:var(--cinnabar-ink); font-size:12px; }
+.recitation-screen .tap-number { font-size:36px; line-height:40px; }
+.recitation-screen .tap-total { font-size:12px; color:var(--ink-2); }
+.recitation-screen .start-tap { min-height:76px; }
+.recitation-screen .start-tap small { font-size:13px; color:var(--ink-2); }
+.recitation-screen.editing-layout .layout-toolbar { gap:4px; flex-wrap:wrap; }
+.recitation-screen .layout-content[contenteditable="true"] { scroll-margin-top:150px; scroll-margin-bottom:250px; }
+.recitation-screen button:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+@media (max-width:360px) {
+  .recitation-screen .recitation-text { padding:18px 14px; }
+  .recitation-screen .recite-title-row h1 { font-size:19px; }
+  .recitation-screen .read-tools { gap:4px; }
+  .recitation-screen .counter-head { flex-wrap:wrap; }
+}
+

@@ -30,6 +30,7 @@
   const fontKey = () => reciteBook === 'heart' && reciteChapter > 1 ? `rikey.fontSize.heart.${reciteChapter}` : reciteBook === 'heart' ? 'rikey.fontSize.heart' : isCustomBook(reciteBook) ? `rikey.fontSize.user.${reciteBook}.${reciteChapter}` : reciteBook === 'cao' ? `rikey.fontSize.cao.${reciteChapter}` : `rikey.fontSize.dao.${reciteChapter}`;
   const currentFontSize = () => Number(localStorage.getItem(fontKey())) || 18;
   let layoutEditing = false;
+  let reciteDockObserver;
   let chapterNumber = 1;
   let statsBook = 'heart';
   let statsFocus = null;
@@ -460,6 +461,7 @@
         <div class="counter-head"><i class="live-dot"></i><span>诵读中</span><span class="counter-hint">轻点任意处记一遍</span><button class="undo-button" data-action="undo" data-key="${countKey}" aria-label="撤销一遍" title="撤销一遍">↶ 撤销</button></div>
         <button class="count-tap" data-action="count" data-key="${countKey}" aria-label="轻点记一遍">
           <span class="tap-ring"></span>
+          <span class="tap-caption">今日已诵</span>
           <span class="tap-main"><b class="tap-number" id="recite-today-count">${bookCount(allBooks().find(entry=>entry.id===reciteBook), day())}</b><span class="tap-unit">遍</span></span>
           <span class="tap-total" id="recite-total-count">累计 ${bookTotalCount(reciteBook)}</span>
           <span class="tap-pop">＋1</span>
@@ -469,6 +471,8 @@
   function renderRecite() {
     const node=document.getElementById('view-recite');
     const shell=document.querySelector('.app-shell');
+    if (reciteDockObserver) reciteDockObserver.disconnect();
+    shell.style.removeProperty('--recite-dock-height');
     if (!reciteBook) {
       shell.classList.remove('immersive');
       const choice = (book, name, seal, sub, key) => `<button class="recite-choice" data-action="open-recitation" data-book="${book}"><span class="choice-seal">${seal}</span><span class="choice-body"><b>${name}</b><small>${sub}</small></span><span class="choice-meta"><b>${sum(key)}</b><small>累计遍数</small></span><span class="choice-arrow">›</span></button>`;
@@ -486,6 +490,14 @@
     layoutEditing=false;
     node.innerHTML=`<div class="recitation-screen" style="--text-size:${currentFontSize()}px">${reciteChrome(bookName)}${content}${isHeart && heartPieces.length<2 ? '' : chapterDialog(reciteBook)}<div class="recite-footer">${readDock()}<div class="recite-actions">${reciteFooter(countKey)}</div></div></div>`;
     syncFontControls();
+    const dock=node.querySelector('.recite-footer');
+    if (dock && typeof ResizeObserver !== 'undefined') {
+      reciteDockObserver=new ResizeObserver(() => {
+        const height=dock.getBoundingClientRect().height;
+        if (height>0) shell.style.setProperty('--recite-dock-height', `${Math.ceil(height)}px`);
+      });
+      reciteDockObserver.observe(dock);
+    }
   }
   let turningChapter = false;
   async function turnChapter(next) {
@@ -905,3 +917,4 @@
   routeTo(route);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { let refreshing=false; const hadController=!!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController&&!refreshing){refreshing=true;location.reload();}}); navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}); }
 })();
+
