@@ -1,6 +1,6 @@
-const CACHE_NAME = 'rikey-static-v37';
+const CACHE_NAME = 'rikey-static-v38';
 const APP_FILES = [
-  './', './index.html', './styles.css?v=37', './time-stats.js?v=37', './app.js?v=37', './data/dao-de-jing.js?v=37', './data/dao-pinyin.js?v=37', './data/heart-pinyin.js?v=37', './data/cao-pinyin.js?v=37', './data/cao-poems.js?v=37',
+  './', './index.html', './styles.css?v=38', './time-stats.js?v=38', './app.js?v=38', './data/dao-de-jing.js?v=38', './data/dao-pinyin.js?v=38', './data/heart-pinyin.js?v=38', './data/cao-pinyin.js?v=38', './data/cao-poems.js?v=38',
   './manifest.webmanifest', './icon.svg'
 ];
 
@@ -21,3 +21,4 @@ self.addEventListener('fetch', event => {
     return response;
   }).catch(() => caches.match(event.request).then(cached => cached || (event.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))));
 });
+
